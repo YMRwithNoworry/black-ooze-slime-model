@@ -15,6 +15,7 @@ GeckoLib pipeline: Bedrock geometry + Bedrock 1.8 animations).
 | `acid_gel_slime.png` | 128×128 base atlas (2.6 KB) |
 | `acid_gel_slime_glow.png` | 128×128 emissive atlas, same UVs (0.3 KB) |
 | `docs/preview_front.png` · `preview_side.png` · `preview_34.png` · `preview_atlas.png` | rasterised previews |
+| `tools/zfight.js` · `tools/lib/zfight.js` | texture-flicker (z-fighting) audit; the build refuses to write while a pair is left |
 | `docs/VERIFY.md` | independent verification report (7 check groups, measured numbers) |
 | `docs/SPEC.md` · `docs/FORMAT.md` | the design contract, and the verified Blockbench/Bedrock format notes |
 | `build_slime.js` · `tools/` | everything is generated: `node build_slime.js` rebuilds all five artifacts |
@@ -95,7 +96,8 @@ or (GeckoLib) a render layer that draws the glow texture over the same geometry:
 ## 5. Rebuild and verify
 
 ```bash
-node build_slime.js       # regenerates all five artifacts + build/report.json
+node build_slime.js       # regenerates all five artifacts + build/report.json (fails on flicker)
+node tools/zfight.js          # texture-flicker audit on its own (exit 0 = no exposed coplanar pair)
 node tools/verify_slime.js    # independent verification (exit 0 = no CRITICAL findings)
 node tools/preview_slime.js   # rasterised previews + ASCII silhouette/accent maps
 ```
@@ -105,7 +107,42 @@ bbmodel/geo/animation writers), `tools/slime_atlas.js` (the tile vocabulary), `t
 slime_geometry.js` (rig), `tools/slime_texture.js` (painting), `tools/slime_animations.js` (the 6
 clips). Change a number, rerun the build, and the project, the exports and the report all follow.
 
-## 6. Honest notes and known limits
+## 6. Texture flicker — the z-fighting fix
+
+A textured face shimmers when *another* face lies on exactly the same plane and points the same
+way: both land on one depth value, so the renderer picks a winner per pixel and per frame and the
+strip where they overlap swaps texture. That is a geometry bug, not a texture bug — repainting
+the atlas never fixes it.
+
+The rig now contains **no exposed coplanar face pair**, and that is enforced, not asserted:
+
+* `tools/lib/zfight.js` is the audit: it groups every face by exact plane, keeps pairs that are
+  coplanar **and face the same way** (a `+x` face against a `-x` face is back to back — one of
+  them is always culled, so it can never shimmer), requires the overlap to be bigger than
+  0.02 × 0.02 units and then probes a 5 × 5 grid over it, counting a sample only when no third
+  cube reaches within ±0.03 units of the plane. Coplanar overlaps buried inside the body are
+  harmless and stay as they are.
+* `build_slime.js` runs it **before** it writes anything and throws while a pair is left, so the
+  artifacts can never be rebuilt with the bug back. `node tools/zfight.js` prints the same report.
+* 9 real pairs were found and fixed in the **puddle** (8 cubes: four arms, four corner cubes — they
+  used to interpenetrate by 0.5 unit and shared their outer planes) plus the **eyes**, the
+  **belly core**, the **drip beads**, the **tongue/lower teeth** and the **dome layers**.
+  Two fixes are worth naming because they are the general answer rather than a nudge:
+  the eight puddle cubes now **abut** instead of sinking into each other (abutting faces point
+  opposite ways), and the front apron's back plane abuts the puddle's front wall instead of
+  sinking 0.1 into it. Both keep every cube at its exact tile size, so the puddle also lies
+  perfectly flat on y = 0 (it used to be staggered 0.00…0.35 by the earlier nudges).
+* The remaining cases are nudges of ≤ 0.5 unit (1/32 block, invisible at 16 units per block):
+  an eyelid overhangs its sclera by 0.05, dome layer 3 is pulled in 0.05 so the eye keeps its full
+  4 × 4 face, the buried belly glow plate is narrowed 0.05, and each drip bead is lifted 0.25–0.35
+  off the ground plane it used to share. Every nudge stays inside the verifier's 0.5-unit uv-vs-face
+  tolerance, so no face ends up sampled from a differently sized tile.
+
+Limit, stated honestly: the audit covers axis-aligned cubes. A rotated cube's faces are not
+parallel to an axis plane, so they cannot be exactly coplanar with one (a shard and its own tip
+share a rotation but sit at different offsets); the CLI prints how many rotated cubes it skipped.
+
+## 7. Honest notes and known limits
 
 * **Verified, not assumed.** `docs/FORMAT.md` records the Blockbench/Bedrock conventions that were
   derived from the installed Blockbench source and then confirmed on a real file pair (141 faces,
@@ -118,9 +155,12 @@ clips). Change a number, rerun the build, and the project, the exports and the r
   lies within 0.35° / 0.004 of the chord between its neighbours (verified: worst shape deviation
   0.316°, and no eased curve is ever touched); raising the sampler `step` in
   `tools/slime_animations.js` from 0.25 to 0.5 would halve it again at some cost in smoothness.
-* **Small ground dips.** During the most violent frames the mesh dips up to 0.75 units below the
-  ground plane (`spawn` −0.73, `death` −0.75, `attack` −0.47, `idle` −0.37, `move` −0.38). The
+* **Small ground dips.** During the most violent frames the mesh dips below the
+  ground plane (`death` −0.80, `spawn` −0.39, `idle` −0.34, `attack` −0.06). The
   rest pose, and the whole `roar`, are clean. It is a squash-and-stretch tradeoff, not a rig error.
+* **Ground contact.** The whole puddle and the front apron now rest flat on y = 0 (the earlier
+  nudges floated most of it 0.00…0.35 up); only the three drip beads are lifted 0.25…0.35, which
+  is exactly what breaks the plane they used to share with the ground.
 * **Two verifier warnings are intentional**: `spawn`/`death` deform the puddle by >4 units
   (that *is* the collapse), and `idle`/`move` do not end on the rest pose because they are loops —
   the correct invariant there is first key == last key, which holds for every channel.
@@ -129,7 +169,7 @@ clips). Change a number, rerun the build, and the project, the exports and the r
   renders. What is *not* verified: the rig tree as drawn in the GUI, and an in-game test.
 * The earlier `black_ooze_slime.*` model from a previous brief is still in the repo, untouched.
 
-## 7. Examples
+## 8. Examples
 
 `examples/resource_pack/` holds a Bedrock client entity and a render controller (the emissive
 layer), both generated and cross-checked against the built geometry/animations — every bone named

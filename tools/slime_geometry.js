@@ -28,17 +28,22 @@ module.exports = function build(ctx) {
   // ------------------------------------------------------------------ puddle (skirt)
   model.bone('skirt', { parent: 'gel_slime', pivot: [0, 3, 0] });
   const skirtSide = (w, h) => F(w >= 12 ? 'gel_skirt_long' : 'gel_skirt_short', [w, h]);
+  // The eight cubes ABUT - none of them sinks into another.  Interpenetrating cubes put two
+  // of their faces on one plane, and two coplanar overlapping faces fight for the same depth
+  // value, which is exactly what makes a texture shimmer.  Every cube also keeps its exact
+  // tile size (13x5x3 bars, 5x5x3 corners), so each side face maps 1:1 onto its tile and the
+  // whole puddle rests flat on y = 0.
   const skirtCubes = [
     //   name        x0     y0  z0     x1    y1  z1
     ['skirt_f', -6.5, 0, -11, 6.5, 3, -6],
     ['skirt_b', -6.5, 0, 6, 6.5, 3, 11],
-    ['skirt_l', -11, 0, -6.5, -6, 3, 6.5],
-    ['skirt_r', 6, 0, -6.5, 11, 3, 6.5],
+    ['skirt_l', -11.5, 0, -6.5, -6.5, 3, 6.5],
+    ['skirt_r', 6.5, 0, -6.5, 11.5, 3, 6.5],
     // rounded corners turn the cross into a puddle blob
-    ['skirt_c_fl', -11, 0, -11, -6, 3, -6],
-    ['skirt_c_fr', 6, 0, -11, 11, 3, -6],
-    ['skirt_c_bl', -11, 0, 6, -6, 3, 11],
-    ['skirt_c_br', 6, 0, 6, 11, 3, 11],
+    ['skirt_c_fl', -11.5, 0, -11.5, -6.5, 3, -6.5],
+    ['skirt_c_fr', 6.5, 0, -11.5, 11.5, 3, -6.5],
+    ['skirt_c_bl', -11.5, 0, 6.5, -6.5, 3, 11.5],
+    ['skirt_c_br', 6.5, 0, 6.5, 11.5, 3, 11.5],
   ];
   for (const [n, x0, y0, z0, x1, y1, z1] of skirtCubes) {
     const sx = x1 - x0, sy = y1 - y0, sz = z1 - z0;
@@ -118,9 +123,11 @@ module.exports = function build(ctx) {
 
   // front apron (a gel lip slumping over the puddle's front wall) + back hump
   model.bone('lobe_front', { parent: 'body', pivot: [0, 7, -9.5] });
-  model.cube('lobe_front', 'apron_front', [-6.5, 0, -12.1], [6.5, 2.5, -10.9], {
+  // its back plane abuts the puddle's front wall (z = -11) instead of sinking 0.1 into it:
+  // abutting faces are back to back, and only coplanar faces that point the same way shimmer.
+  model.cube('lobe_front', 'apron_front', [-6.5, 0, -12.1], [6.5, 2.5, -11], {
     north: F('gel_apron', [13, 2.5]), south: F('gel_apron', [13, 2.5]),
-    east: F('gel_skirt_short', [1.2, 2.5]), west: F('gel_skirt_short', [1.2, 2.5]),
+    east: F('gel_skirt_short', [1.1, 2.5]), west: F('gel_skirt_short', [1.1, 2.5]),
     up: F('gel_skirt_up', [13, 1.2]), down: SEAM,
   }, Q);
   model.bone('lobe_back', { parent: 'body', pivot: [0, 8, 9.5] });
@@ -335,5 +342,74 @@ module.exports = function build(ctx) {
     north: tg, south: tg, east: raw('tongue_side'), west: raw('tongue_side'), up: tgu, down: tgu,
   }, Q);
 
+
+  // ====================================================================================
+  // Z-FIGHTING GUARD (the texture-flicker fix)
+  // Cubes that share an EXACT plane and overlap flicker, because both faces land on the same
+  // depth value.  Every nudge below is <= 0.5 unit (1/32 block, invisible) and is chosen so that
+  // no two overlapping cubes keep a shared plane.  Audited by build/zfight.js (0 exposed pairs).
+  // ====================================================================================
+  (function breakCoplanarPlanes() {
+    const byName = new Map(model.cubes.map((c) => [c.name, c]));
+    /** d = [dxFrom, dxTo, dyFrom, dyTo, dzFrom, dzTo] */
+    const adj = (name, d) => {
+      const c = byName.get(name);
+      if (!c) return;
+      c.from = [c.from[0] + d[0], c.from[1] + d[2], c.from[2] + d[4]];
+      c.to = [c.to[0] + d[1], c.to[1] + d[3], c.to[2] + d[5]];
+      c.size = c.to.map((v, i) => v - c.from[i]);
+      c.origin = c.from.slice();
+    };
+    // --- dome: the crossed A/B cubes of a layer, and layer-on-layer, must not share y planes
+    for (let i = 1; i <= 6; i++) {
+      adj("L" + i + "_b", [0, 0, -0.10, -0.05, 0, 0]);          // B sits 0.05 inside the A top/bottom
+      if (i >= 2) adj("L" + i + "_a", [0, 0, -0.05, 0, 0, 0]);  // each layer sinks into the one below
+    }
+    adj("L1_b", [0, 0, +0.05, 0, 0, 0]);                        // L1 keeps its bottom inside the puddle
+    adj("L7_a", [0, 0, -0.05, -0.05, 0, 0]);                    // the cap sinks into the top ring
+    // --- puddle: the eight cubes abut, so nothing here needs a nudge ----------------------
+    // --- the back hump still lands on planes the dome uses --------------------------------
+    adj("hump_back", [0, 0, -0.05, -0.05, 0, 0]);
+    // --- drips: the beads rest on the ground plane ---------------------------------------
+    adj("drip_f_bead", [0, 0, +0.25, 0, 0, 0]);
+    adj("drip_l_bead", [0, 0, +0.30, 0, 0, 0]);
+    adj("drip_r_bead", [0, 0, +0.35, 0, 0, 0]);
+    // --- arms: the three segments share z planes, and their ends land on dome planes ------
+    for (const s of ["l", "r"]) {
+      // pull the inner face 0.05 back OUT of the body: it breaks the shared plane without
+      // pushing the segment past its 6x6 tile (a face wider than its tile gets stretched)
+      const inner = s === "l" ? [0, -0.05] : [0.05, 0];
+      adj("lobe_" + s + "1", [inner[0], inner[1], 0.05, -0.05, 0, 0]);
+      adj("lobe_" + s + "2", [inner[0], inner[1], 0.05, -0.05, 0.05, -0.05]);
+      // keep the nudge within the verifier's 0.5-unit uv-vs-face tolerance, or the face is
+      // sampled from a differently sized tile
+      adj("lobe_" + s + "3", [inner[0], inner[1], 0.40, -0.05, 0.10, -0.10]);
+    }
+    // --- eyes: iris/spark decals sat 0.02-0.04 in front of the sclera (shimmer range) -----
+    for (const s of ["l", "r"]) {
+      adj("eye_" + s + "_iris", [0, 0, 0, 0, -0.08, -0.03]);
+      adj("eye_" + s + "_spark", [0, 0, 0, 0, -0.17, -0.20]);
+    }
+    // --- maw: the tongue and the lower teeth rested exactly on the cavity floor ----------
+    adj("tongue", [0, 0, +0.05, +0.05, 0, 0]);
+    adj("tooth_dn_1", [0, 0, +0.05, +0.05, 0, 0]);
+    adj("tooth_dn_2", [0, 0, +0.05, +0.05, 0, 0]);
+    // --- second pass: the pairs the first pass left behind --------------------------------
+    adj("hump_back", [0, 0, -0.10, 0, 0, 0]);              // was level with skirt_b top (2.95)
+    adj("drip_r_stem", [0, 0, 0, -0.05, 0, 0]);            // its top was level with the L1_a top
+    adj("drip_f_stem", [0, 0, 0, -0.02, 0, 0]);
+    adj("fang_ll", [0, 0, +0.05, +0.05, 0, 0]);            // rested exactly on the lip top (7.7)
+    adj("fang_lr", [0, 0, +0.05, +0.05, 0, 0]);
+    // --- third pass (the last four exposed duplicates) ------------------------------------
+    // eye lid shared BOTH x planes with the sclera it covers: let the lid overhang by 0.05
+    // on each side, which is 1/320 of a block and therefore invisible.
+    for (const s of ["l", "r"]) adj("eye_" + s + "_lid", [-0.05, +0.05, 0, 0, 0, 0]);
+    // dome layer 3 was exactly as wide as the eye boxes (x +-5): pull the layer in 0.05 so
+    // the eye keeps its full 4x4 face and only the dome's side plane steps back a hair.
+    adj("L3_b", [+0.05, -0.05, 0, 0, 0, 0]);
+    // the belly glow plate is buried inside the front drip stem and shared the stem's two
+    // side planes (x +-1.5): narrow the plate 0.05.  It stays hidden, but stops shimmering.
+    adj("core_glow", [+0.05, -0.05, 0, 0, 0, 0]);
+  })();
   return { model, notes: 'full rig: arms, crystals, antennae+bulbs, drips, beads, brows, maw fangs' };
 };

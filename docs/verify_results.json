@@ -1,9 +1,9 @@
 {
- "generated": "2026-10-02T15:01:02.678Z",
+ "generated": "2026-10-02T15:45:39.359Z",
  "counts": {
   "critical": 0,
   "warning": 2,
-  "info": 11
+  "info": 10
  },
  "groups": [
   {
@@ -14,7 +14,7 @@
     {
      "name": "parses",
      "ok": true,
-     "detail": "acid_gel_slime.bbmodel (818.7 KiB)"
+     "detail": "acid_gel_slime.bbmodel (820.4 KiB)"
     },
     {
      "name": "meta.format_version = 5.0",
@@ -94,7 +94,7 @@
     {
      "name": "cube sizes integral (informational)",
      "ok": true,
-     "detail": "26 cube(s) use fractional sizes: apron_front,core_gem,core_glow,knob,eye_l_sclera,eye_l_iris"
+     "detail": "48 cube(s) use fractional sizes: drip_f_stem,drip_f_bead,drip_l_bead,drip_r_stem,drip_r_bead,L2_a"
     },
     {
      "name": "bbmodel animations embedded",
@@ -141,7 +141,7 @@
     {
      "name": "standalone PNGs identical to embedded",
      "ok": true,
-     "detail": "sha256 8f0ce7aa8be2 / a44ca7219f06"
+     "detail": "sha256 f3614df53ebb / 3ba8b235c5ce"
     },
     {
      "name": "base atlas has no transparent texel",
@@ -151,7 +151,7 @@
     {
      "name": "free atlas space is repaint-friendly (informational)",
      "ok": true,
-     "detail": "outside tiles: 13030 px, 46 distinct colours (swatch board + palette grid)"
+     "detail": "outside tiles: 13030 px, 48 distinct colours (swatch board + palette grid)"
     },
     {
      "name": "every declared tile is painted on the base atlas",
@@ -186,7 +186,7 @@
     {
      "name": "base atlas uses only PALETTE hues (SPEC 1)",
      "ok": true,
-     "detail": "18 distinct non-palette hexes (gradients/shading)"
+     "detail": "19 distinct non-palette hexes (gradients/shading)"
     }
    ]
   },
@@ -382,7 +382,7 @@
     {
      "name": "clip move: mesh stays attached",
      "ok": true,
-     "detail": "worst 2.43u on skirt @t=0.5"
+     "detail": "worst 2.54u on skirt @t=0.5"
     },
     {
      "name": "clip attack: loop flag",
@@ -407,7 +407,7 @@
     {
      "name": "clip attack: mesh stays attached",
      "ok": true,
-     "detail": "worst 3.3u on lobe_r @t=0.52"
+     "detail": "worst 3.27u on lobe_r @t=0.52"
     },
     {
      "name": "clip roar: loop flag",
@@ -432,7 +432,7 @@
     {
      "name": "clip roar: mesh stays attached",
      "ok": true,
-     "detail": "worst 2.38u on lobe_r @t=0.93"
+     "detail": "worst 2.37u on lobe_r @t=0.93"
     },
     {
      "name": "clip spawn: loop flag",
@@ -457,7 +457,7 @@
     {
      "name": "clip spawn: mesh stays attached (informational: intentional collapse)",
      "ok": true,
-     "detail": "worst 4.2u on skirt @t=0"
+     "detail": "worst 4.39u on skirt @t=0"
     },
     {
      "name": "clip death: loop flag",
@@ -560,7 +560,7 @@
   {
    "sev": "WARNING",
    "group": "G5",
-   "title": "clip spawn: skirt moves 4.2u away from its parent (>4u)",
+   "title": "clip spawn: skirt moves 4.39u away from its parent (>4u)",
    "where": "tools/slime_animations.js",
    "fix": "check the pivot of that bone / ease the motion",
    "detail": "t=0 of 1.4",
@@ -578,10 +578,10 @@
   {
    "sev": "INFO",
    "group": "G1",
-   "title": "26 cube(s) with non-integer size",
+   "title": "48 cube(s) with non-integer size",
    "where": "docs/SPEC.md:2 (anchors themselves use e.g. eye depth 2.1)",
    "fix": "none required: the frozen anchors use fractional sizes too",
-   "detail": "apron_front,core_gem,core_glow,knob,eye_l_sclera,eye_l_iris,eye_l_spark,eye_l_lid",
+   "detail": "drip_f_stem,drip_f_bead,drip_l_bead,drip_r_stem,drip_r_bead,L2_a,L2_b,L3_a",
    "id": "I-01"
   },
   {
@@ -590,7 +590,7 @@
    "title": "the atlas has painted pixels outside every declared tile (harmless: nothing samples them)",
    "where": "tools/slime_texture.js",
    "fix": "optional: paint only inside the allocated tiles",
-   "detail": "10,15,20 x11308 | 184,247,221 x236 | 23,69,58 x134 | 18,56,48 x129",
+   "detail": "10,15,20 x11308 | 184,247,221 x234 | 29,79,61 x141 | 18,56,48 x129",
    "id": "I-02"
   },
   {
@@ -605,7 +605,7 @@
   {
    "sev": "INFO",
    "group": "G5",
-   "title": "clip idle sinks the mesh to y=-0.37 (below the ground plane) at t=2",
+   "title": "clip idle sinks the mesh to y=-0.34 (below the ground plane) at t=2",
    "where": "tools/slime_animations.js",
    "fix": "intended squash into the ground? otherwise lift the clip",
    "detail": "ground is y=0",
@@ -623,7 +623,7 @@
   {
    "sev": "INFO",
    "group": "G5",
-   "title": "clip move sinks the mesh to y=-0.38 (below the ground plane) at t=0.5",
+   "title": "clip attack sinks the mesh to y=-0.06 (below the ground plane) at t=0.63",
    "where": "tools/slime_animations.js",
    "fix": "intended squash into the ground? otherwise lift the clip",
    "detail": "ground is y=0",
@@ -632,7 +632,7 @@
   {
    "sev": "INFO",
    "group": "G5",
-   "title": "clip attack sinks the mesh to y=-0.47 (below the ground plane) at t=0.63",
+   "title": "clip spawn sinks the mesh to y=-0.39 (below the ground plane) at t=0.7",
    "where": "tools/slime_animations.js",
    "fix": "intended squash into the ground? otherwise lift the clip",
    "detail": "ground is y=0",
@@ -641,20 +641,11 @@
   {
    "sev": "INFO",
    "group": "G5",
-   "title": "clip spawn sinks the mesh to y=-0.73 (below the ground plane) at t=0.7",
+   "title": "clip death sinks the mesh to y=-0.8 (below the ground plane) at t=0.6",
    "where": "tools/slime_animations.js",
    "fix": "intended squash into the ground? otherwise lift the clip",
    "detail": "ground is y=0",
    "id": "I-08"
-  },
-  {
-   "sev": "INFO",
-   "group": "G5",
-   "title": "clip death sinks the mesh to y=-0.75 (below the ground plane) at t=0.6",
-   "where": "tools/slime_animations.js",
-   "fix": "intended squash into the ground? otherwise lift the clip",
-   "detail": "ground is y=0",
-   "id": "I-09"
   },
   {
    "sev": "INFO",
@@ -663,7 +654,7 @@
    "where": "tools/slime_geometry.js",
    "fix": "SPEC 1 allows deliberate asymmetric details - confirm intent",
    "detail": "drip_l/drip_r: unmatched drip_l_stem,drip_l_bead extra on right drip_r_stem,drip_r_bead | lobe_l/lobe_r: unmatched lobe_l1 extra on right lobe_r1 | bead_l/bead_r: unmatched bead_l extra on right bead_r",
-   "id": "I-10"
+   "id": "I-09"
   },
   {
    "sev": "INFO",
@@ -672,7 +663,7 @@
    "where": "tools/slime_geometry.js (fang cubes, SPEC 2 anchors: fangs poke out of the grin)",
    "fix": "design intent - just make sure the art reads as fangs, not gum",
    "detail": "lip y [4.4,7.7], visible tooth tips at y 3.63/3.88/4.13/4.38/7.88/8.13 (hit z -9.8..-9.8, lip front z -9.9)",
-   "id": "I-11"
+   "id": "I-10"
   }
  ],
  "summary": {
@@ -722,55 +713,55 @@
      "worstBone": "lobe_r",
      "worstT": 1,
      "endDev": 11.273,
-     "minYmid": -0.37,
-     "maxAbs": 2.8
+     "minYmid": -0.34,
+     "maxAbs": 2.68
     },
     "move": {
      "len": 1,
      "loop": true,
      "bones": 27,
      "keys": 179,
-     "worst": 2.43,
+     "worst": 2.54,
      "worstBone": "skirt",
      "worstT": 0.5,
      "endDev": 1.2,
-     "minYmid": -0.38,
-     "maxAbs": 7.48
+     "minYmid": 0.03,
+     "maxAbs": 7.35
     },
     "attack": {
      "len": 1.25,
      "loop": false,
      "bones": 36,
      "keys": 236,
-     "worst": 3.3,
+     "worst": 3.27,
      "worstBone": "lobe_r",
      "worstT": 0.52,
      "endDev": 0,
-     "minYmid": -0.47,
-     "maxAbs": 11.28
+     "minYmid": -0.06,
+     "maxAbs": 10.87
     },
     "roar": {
      "len": 1.6,
      "loop": false,
      "bones": 31,
      "keys": 245,
-     "worst": 2.38,
+     "worst": 2.37,
      "worstBone": "lobe_r",
      "worstT": 0.93,
      "endDev": 0,
-     "minYmid": 0.43,
-     "maxAbs": 7.97
+     "minYmid": 0.37,
+     "maxAbs": 7.69
     },
     "spawn": {
      "len": 1.4,
      "loop": false,
      "bones": 28,
      "keys": 177,
-     "worst": 4.2,
+     "worst": 4.39,
      "worstBone": "skirt",
      "worstT": 0,
      "endDev": 0,
-     "minYmid": -0.73,
+     "minYmid": -0.39,
      "maxAbs": 20.82
     },
     "death": {
@@ -782,14 +773,14 @@
      "worstBone": "jelly_top",
      "worstT": 1.2,
      "endDev": null,
-     "minYmid": -0.75,
+     "minYmid": -0.8,
      "maxAbs": 20.22
     }
    },
    "easings": {},
    "molang": [],
    "worst": {
-    "d": 4.202383252393814,
+    "d": 4.393207825723708,
     "clip": "spawn",
     "bone": "skirt",
     "t": 0
