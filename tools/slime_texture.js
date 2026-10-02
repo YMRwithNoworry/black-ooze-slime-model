@@ -66,6 +66,25 @@ module.exports = function build(ctx) {
   const bayThin = (x, y) => (((x * 5 + y * 7) % 9) + 0.5) / 9;
   const bay = (x, y, h) => (h !== undefined && h <= 4 ? bayThin(x, y) : bay4(x, y));
 
+  // ---- coherent value noise: how the references get their mottling ----------------------
+  // The reference creatures in refs/ are mottled over the WHOLE surface (no large flat areas),
+  // but the mottling arrives as CLUMPS whose silhouette wanders over 2-4 texels.  At one texel
+  // per model unit a per-texel hash or a Bayer dither is not mottling - it is static, and it is
+  // what made the gel look like scattered confetti.  Smooth low-frequency value noise, pushed
+  // through the palette ramp (which quantises it into hard tone steps), gives the same dense
+  // coverage with patches a human eye reads as painted stone/gel instead of noise.
+  function vnoise(x, y, s) {
+    const xi = Math.floor(x), yi = Math.floor(y);
+    const xf = x - xi, yf = y - yi;
+    const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+    const a = hash(xi, yi, s), b = hash(xi + 1, yi, s);
+    const c = hash(xi, yi + 1, s), d = hash(xi + 1, yi + 1, s);
+    return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
+  }
+  function fbm2(x, y, s) {
+    return vnoise(x, y, s) * 0.62 + vnoise(x * 2.07 + 13.4, y * 2.03 + 7.1, s + 977) * 0.38;
+  }
+
   // ---- pen: bounds-checked drawing inside a tile ---------------------------------------
   function pen(view, w, h, seed) {
     const P = {
@@ -77,31 +96,86 @@ module.exports = function build(ctx) {
       outline(c) { P.row(0, 0, w - 1, c); P.row(h - 1, 0, w - 1, c); P.col(0, 0, h - 1, c); P.col(w - 1, 0, h - 1, c); },
       circle(cx, cy, r, c) { for (let y = Math.floor(cy - r); y <= Math.ceil(cy + r); y++) for (let x = Math.floor(cx - r); x <= Math.ceil(cx + r); x++) if ((x - cx) ** 2 + (y - cy) ** 2 <= r * r) P.px(x, y, c); },
       poly(pts, c) { view.fillPoly(pts, c); },
-      /** dithered vertical ramp: kTop -> kBot carried by a Bayer dither + per-texel grain */
-      ramp(y0, y1, kTop, kBot, put, grain = 0.55) {
+      /** Vertical ramp, POSTERISED: kTop -> kBot in hard steps, one flat colour per row band.
+          Deliberately not dithered.  The atlas runs at one texel per model unit, so a per-texel
+          Bayer/hash dither ('grain' is accepted and ignored) is exactly the speckle that reads as
+          noise on screen - flat bands plus a few deliberate specks read as painted material. */
+      ramp(y0, y1, kTop, kBot, put, grain = 0, bands = 0) {
         const rows = Math.max(1, y1 - y0 + 1);
-        for (let yy = y0; yy <= y1; yy++) for (let xx = 0; xx < w; xx++) {
+        // 2 flat bands on a 3-4 row tile, 3 on anything taller: a 1-row-per-tone ramp reads as
+        // stripes, and two tones with a clean edge read as painted form.
+        const nb = bands || clamp(Math.round(rows / 2), 1, 3);
+        for (let yy = y0; yy <= y1; yy++) {
           const t = rows > 1 ? (yy - y0) / (rows - 1) : 0;
-          const thin = rows <= 4 ? 1.35 : 1;
-          const k = kTop + (kBot - kTop) * t + (bay(xx, yy, h) - 0.5) * 0.95 * thin + (hash(xx, yy, P.seed) - 0.5) * grain * thin;
-          put(xx, yy, k);
+          const b = nb > 1 ? Math.min(nb - 1, Math.floor(t * nb)) : 0;
+          const k = nb > 1 ? kTop + (kBot - kTop) * (b / (nb - 1)) : (kTop + kBot) / 2;
+          for (let xx = 0; xx < w; xx++) put(xx, yy, k);
         }
       },
-      /** a bit of gel grit: bright specks and dark pits, deterministic per tile */
+      /** Coherent mottling over the WHOLE tile - the general gel surface.
+          This is the single most important style change: the reference models are mottled
+          everywhere, but the mottling arrives as clumps with wandering outlines, not as one flat
+          tone with a couple of random rectangles dropped on it (which read as accidental damage,
+          not as material).  scale < 1 makes the clumps wider than a texel, amp is the tone
+          spread, drop tilts the tone darker towards the tile's bottom edge (gel pools dark) and
+          jitter keeps a whisper of per-texel break-up without turning it into static. */
+      mottle(k, o = {}) {
+        const map = o.map || gel;
+        const sc = (o.scale === undefined ? 0.62 : o.scale);
+        const amp = (o.amp === undefined ? 1.5 : o.amp);
+        const drop = (o.drop === undefined ? 0.9 : o.drop);
+        const jit = (o.jitter === undefined ? 0.22 : o.jitter);
+        const seed = P.seed + (o.seed || 0);
+        for (let y = 0; y < h; y++) {
+          const vk = h > 1 ? drop * (y / (h - 1)) : 0;
+          for (let x = 0; x < w; x++) {
+            const n = fbm2(x * sc + 0.5, y * sc + 0.5, seed);
+            P.px(x, y, map(k + (n - 0.5) * amp - vk + (hash(x, y, seed + 31) - 0.5) * jit));
+          }
+        }
+      },
+      /** Shapes drawn from the noise field itself, so "features" have the same wandering
+          outlines as the mottling instead of being axis-aligned boxes. */
+      blotch(k, o = {}) {
+        const map = o.map || gel;
+        const cx = (o.x === undefined ? (w - 1) / 2 : o.x), cy = (o.y === undefined ? (h - 1) / 2 : o.y);
+        const r = (o.r === undefined ? 2 : o.r), sc = (o.scale === undefined ? 0.7 : o.scale);
+        const soft = (o.soft === undefined ? 0.35 : o.soft), seed = P.seed + (o.seed || 0);
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+          const d = Math.hypot((x - cx) / Math.max(0.6, r), (y - cy) / Math.max(0.6, r * (o.squash || 1)));
+          const n = fbm2(x * sc + 9.3, y * sc + 4.7, seed);
+          if (d + (n - 0.5) * soft * 2.2 <= 1) P.px(x, y, map(k));
+        }
+      },
+      /** A few *deliberate* gel specks: one texel of light with one texel of shadow under it, so
+          the eye reads a glint rather than grain.  Capped at 3 per tile on purpose. */
       grit(n, kBase, spread = 4) {
-        for (let i = 0; i < n; i++) {
-          const x = Math.floor(hash(i, 1, P.seed + 7) * w), y = Math.floor(hash(i, 2, P.seed + 11) * h);
-          const bright = hash(i, 3, P.seed + 13) > 0.45;
-          P.px(x, y, gel(kBase + (bright ? 1 + spread * 0.5 : -spread * 0.4) * (0.5 + hash(i, 4, P.seed) * 0.5)));
+        // one or two CONTIGUOUS mottling patches, 2-4 texels across.  Isolated single texels at
+        // one texel per model unit read as dirt on screen; a patch reads as painted material.
+        const patches = Math.min(2, Math.max(1, Math.round(n / 3)));
+        for (let i = 0; i < patches; i++) {
+          const cw = Math.min(w, 2 + Math.floor(hash(i, 5, P.seed + 3) * 2.6));
+          const ch = Math.min(h, 1 + Math.floor(hash(i, 6, P.seed + 5) * 2.4));
+          const cx = Math.floor(hash(i, 1, P.seed + 7) * Math.max(1, w - cw));
+          const cy = Math.floor(hash(i, 2, P.seed + 11) * Math.max(1, h - ch));
+          const k = kBase + (hash(i, 3, P.seed + 13) > 0.5 ? 1 : -1);
+          for (let y = cy; y < cy + ch; y++) for (let x = cx; x < cx + cw; x++) P.px(x, y, gel(k));
         }
       },
       // 3x3 gel bubble: bright upper-left arc, softened lower-right, glassy middle
       bubble3(x, y, k) {
-        P.px(x + 1, y, gel(k + 3)); P.px(x, y + 1, gel(k + 3)); P.px(x + 1, y + 1, gel(k - 1));
-        P.px(x + 2, y + 1, gel(k + 1)); P.px(x + 1, y + 2, gel(k + 1));
-        P.px(x + 2, y, gel(k + 1)); P.px(x, y + 2, gel(k + 1));
+        P.px(x + 1, y, gel(k + 1.6)); P.px(x, y + 1, gel(k + 1.2));
+        P.px(x + 1, y + 1, gel(k - 0.4));
+        P.px(x + 2, y + 1, gel(k + 0.5)); P.px(x + 1, y + 2, gel(k + 0.5));
       },
       streak(x, y0, y1, k) { P.col(x, y0, y1, gel(k + 2)); P.px(x, y0, gel(k + 4)); },
+      /** A 1-texel bevel: lit top row, shaded bottom row and flanks.  This is what makes a block
+          read as a solid volume instead of a flat patch - deliberate structure, not noise. */
+      bevel(k, lift = 1, drop = 1, flanks = true) {
+        P.row(0, 0, w - 1, gel(k + lift));
+        P.row(h - 1, 0, w - 1, gel(k - drop));
+        if (flanks && h >= 3) { P.col(0, 1, h - 2, gel(k - drop * 0.7)); P.col(w - 1, 1, h - 2, gel(k - drop * 0.7)); }
+      },
     };
     return P;
   }
@@ -134,75 +208,77 @@ module.exports = function build(ctx) {
     const kc = light * (GEL.length - 1);
     const R = (y0, y1, a, b) => P.ramp(y0, y1, a, b, (x, y, k) => P.px(x, y, gel(k)));
 
+    // Every gel surface is mottled over its WHOLE area in coherent clumps, then shaped by
+    // gravity-driven features: a lit waterline, vertical run-off streaks, pooled dark at the
+    // bottom edge.  The material reads as one surface rather than a tinted box.
     if (part === 'skirt') {
-      // wet ground puddle: bright waterline, dark contact shadow, dense mottling, drips
-      R(0, h - 1, kc + 1.1, kc - 1.3, 0.85);
-      P.row(0, 0, w - 1, gel(kc + 2.4));
-      P.row(0, 1, w - 2, gel(kc + 3.0));
-      for (let i = 0; i < Math.max(2, Math.round(w / 4)); i++) {
+      // wet ground puddle: dark pooled gel, a bright waterline, run-off streaks below it
+      const k = Math.round(kc);
+      P.mottle(k, { scale: 0.75, amp: 1.8, drop: 1.4, jitter: 0.2 });
+      P.row(0, 0, w - 1, gel(k + 2));                       // waterline
+      for (let i = 0; i < Math.max(2, Math.round(w / 5)); i++) {
         const x = Math.floor(hash(i, 1, P.seed) * w);
-        P.col(x, 0, Math.max(1, h - 3), gel(kc + 1.6)); P.px(x, 0, gel(kc + 3.2));
+        P.col(x, 1, Math.max(1, h - 2), gel(k - 1));        // run-off columns
+        P.px(x, 1, gel(k + 1));
       }
-      P.row(h - 1, 0, w - 1, gel(kc - 3.2));
-      P.row(Math.max(1, h - 2), 0, w - 1, gel(kc - 2.0));
-      for (let i = 0; i < Math.max(1, Math.round(w / 5)); i++) P.bubble3(1 + Math.floor(hash(i, 5, P.seed) * Math.max(1, w - 4)), Math.max(1, h - 4), kc);
-      P.grit(Math.max(3, Math.round(w * 0.5)), kc, 4);
+      P.row(h - 1, 0, w - 1, gel(k - 2));                   // contact shadow
+      if (h >= 3) { P.col(0, 1, h - 2, gel(k - 1)); P.col(w - 1, 1, h - 2, gel(k - 1)); }
       return;
     }
     if (part === 'drip') {
-      R(0, h - 1, kc + 0.9, kc - 1.6, 0.7);
-      P.col(0, 0, h - 1, gel(kc - 1.2)); P.col(w - 1, 0, h - 1, gel(kc - 1.2));
-      P.col(Math.min(w - 1, 1), 0, h - 1, gel(kc + 1.8)); P.px(Math.min(w - 1, 1), 0, gel(kc + 3.4));
-      P.px(0, h - 1, gel(kc - 2.6)); P.px(w - 1, h - 1, gel(kc - 2.6));
-      P.grit(2, kc, 3);
+      // a hanging drip: dark at the tip, one wet highlight running down its leading edge
+      const k = Math.round(kc);
+      P.mottle(k, { scale: 0.8, amp: 0.9, drop: 1.2, jitter: 0.14 });
+      P.col(0, 0, h - 1, gel(k - 1)); P.col(w - 1, 0, h - 1, gel(k - 1));
+      P.col(Math.min(w - 1, 1), 0, h - 1, gel(k + 2)); P.px(Math.min(w - 1, 1), 0, gel(k + 3));
       return;
     }
     if (part === 'lobe') {
-      R(0, h - 1, kc + 1.0, kc - 1.4, 0.6);
-      P.row(0, 1, w - 2, gel(kc + 1.9));
-      P.px(1, 0, gel(kc + 3.2)); P.px(w - 2, 0, gel(kc + 2.6));
-      P.row(h - 1, 0, w - 1, gel(kc - 2.2));
-      P.col(0, 1, h - 1, gel(kc - 0.8)); P.col(w - 1, 1, h - 1, gel(kc - 0.8));
-      P.bubble3(1 + Math.floor(r() * Math.max(1, w - 4)), Math.max(1, h - 3), kc - 0.5);
-      P.grit(3, kc, 4);
+      const k = Math.round(kc);
+      P.mottle(k, { scale: 0.58, amp: 1.9, drop: 0.9, jitter: 0.24 });
+      P.bevel(k, 1.5, 1.5);
+      if (w >= 7 && h >= 4) P.blotch(k + 0.9, { x: 1 + r() * (w - 4), y: h - 3, r: 2.2, squash: 0.85 });
       return;
     }
     if (part === 'knob') {
-      R(0, h - 1, kc + 1.0, kc - 1.0, 0.5);
-      P.box(1, 0, Math.max(1, w - 2), Math.max(1, Math.floor(h / 2)), gel(kc + 1.4));
-      P.px(1, 1, GEL[GEL.length - 2]); P.px(2, 0, GEL[GEL.length - 1]); P.px(2, 1, gel(kc + 2.6));
-      P.row(h - 1, 0, w - 1, gel(kc - 1.8));
-      P.col(0, 0, h - 1, gel(kc - 0.6)); P.col(w - 1, 0, h - 1, gel(kc - 0.6));
-      P.grit(4, kc, 3);
+      const k = Math.round(kc);
+      P.mottle(k, { scale: 0.66, amp: 1.2, drop: 0.6, jitter: 0.18 });
+      P.px(1, 1, gel(k + 3)); P.px(2, 0, gel(k + 3)); P.px(2, 1, gel(k + 2));
+      P.row(h - 1, 0, w - 1, gel(k - 1));
       return;
     }
     if (part === 'antenna') {
-      R(0, h - 1, kc + 0.8, kc - 1.2, 0.4);
-      P.col(Math.min(w - 1, 1), 0, h - 1, gel(kc + 1.8));
-      P.px(1, 0, gel(kc + 3.0)); P.col(0, 0, h - 1, gel(kc - 1.0)); P.col(w - 1, 0, h - 1, gel(kc - 1.0));
+      const k = Math.round(kc);
+      P.mottle(k, { scale: 0.8, amp: 1.0, drop: 0.5, jitter: 0.16 });
+      P.bevel(k, 1, 1, false);
+      P.col(Math.min(w - 1, 1), 0, h - 1, gel(k + 2));
+      P.px(1, 0, gel(k + 3));
       return;
     }
-    // dome / lid / streak: the layer gradient, carried by the dither, plus wet life
-    R(0, h - 1, kc + 0.75, kc - 0.75, 0.55);
-    P.row(0, 0, w - 1, gel(kc + 1.3));
-    P.row(h - 1, 0, w - 1, gel(kc - 1.4));
-    P.col(0, 1, h - 1, gel(kc - 0.9));
-    P.col(w - 1, 1, h - 1, gel(kc - 1.1));
-    // wet highlight streaks up high, bubbles down low
-    if (light > 0.42 && w >= 5) {
-      const n = 1 + Math.floor(hash(0, 9, P.seed) * 2);
+    // dome / lid / streak: the six dome layers already carry the vertical gradient
+    // (light 0.10 -> 0.92), so the tile supplies the material - full-coverage clumped
+    // mottling, a lit top edge, pooled shadow along the bottom edge, run-off streaks on the
+    // taller faces, one wet glint up high or one bubble down low.
+    const k = Math.round(kc);
+    P.mottle(k, { scale: 0.65, amp: 3.1, drop: 1.2, jitter: 0.3 });
+    P.bevel(k, 2, 2);
+    if (h >= 5 && w >= 6) {                         // gel running off the layer above
+      const n = 1 + Math.floor(hash(0, 21, P.seed) * 2);
       for (let i = 0; i < n; i++) {
-        const x = 1 + Math.floor(hash(i, 8, P.seed) * (w - 2));
-        P.px(x, 0, gel(kc + 3.4)); P.px(x, 1, gel(kc + 2.2));
-        if (hash(i, 12, P.seed) > 0.5) P.px(x, 2, gel(kc + 1.2));
+        const x = 1 + Math.floor(hash(i, 22, P.seed) * (w - 2));
+        const y1 = Math.max(1, Math.floor(h * (0.25 + hash(i, 23, P.seed) * 0.4)));
+        P.col(x, 1, y1, gel(k + 1.2));
+        P.px(x, y1, gel(k + 2));
       }
     }
-    if (light < 0.55 && w >= 7 && h >= 3) {
-      const bx = 1 + Math.floor(hash(3, 6, P.seed) * (w - 4));
-      P.bubble3(bx, h - 3, kc + 0.4);
-      if (w >= 12) P.bubble3(Math.min(w - 4, bx + 5), Math.max(0, h - 4), kc + 0.4);
+    if (light > 0.5 && w >= 6 && h >= 5) {          // one 2-texel wet glint, only where it fits
+      const x = 1 + Math.floor(hash(0, 8, P.seed) * (w - 2));
+      P.px(x, 0, gel(k + 2)); P.px(x, 1, gel(k + 1));
     }
-    P.grit(Math.max(2, Math.round(w * 0.35)), kc, 4);
+    if (light < 0.5 && w >= 8 && h >= 6) {          // one bubble, only on a tile tall enough
+      P.blotch(k + 0.9, { x: 1 + hash(3, 6, P.seed) * (w - 4), y: h - 3, r: 2.2, squash: 0.8 });
+      P.px(Math.max(1, Math.floor(1 + hash(3, 6, P.seed) * (w - 4)) - 1), Math.max(2, h - 4), gel(k - 1));
+    }
   };
 
   painters.gel_up = function (p) {
@@ -211,78 +287,63 @@ module.exports = function build(ctx) {
     let light = lightOf(t, 0.85);
     if (part === 'skirt') light = Math.max(0, light - 0.45);
     const kc = light * (GEL.length - 1) + 0.8;
-    if (h === 1) {   // single-row ridge (lip/knob tops): per-texel sheen, never flat
-      const bits = [9, 11, 10, 12, 10, 11, 9, 12];
-      for (let x = 0; x < w; x++) P.px(x, 0, gel(bits[x % bits.length] - 2 + lightOf(t, 0.6) * 4));
-      P.px(0, 0, gel(kc - 4)); P.px(w - 1, 0, gel(kc - 4));
+    if (h === 1) {   // single-row ridge (lip/knob tops): a sheen with clumped break-up
+      const k = Math.round(kc);
+      for (let x = 0; x < w; x++) {
+        const n = fbm2(x * 0.85 + 0.5, 0.5, P.seed);
+        P.px(x, 0, gel(k + (n - 0.5) * 1.6 + 0.3 - Math.abs(x - (w - 1) / 2) / Math.max(1, w)));
+      }
+      P.px(0, 0, gel(k - 3)); P.px(w - 1, 0, gel(k - 3));
       return;
     }
     if (part === 'skirt') {
-      // dark wet pool with the body reflected in it
-      P.ramp(0, h - 1, kc - 3.0, kc - 4.2, (x, y, k) => P.px(x, y, gel(k)), 0.9);
+      // dark wet pool: clumped tone, a soft reflection patch, shaded rim
+      const k = Math.round(kc - 3.6);
+      P.mottle(k, { scale: 0.85, amp: 1.0, drop: 0.5, jitter: 0.12 });
       const cx = (w - 1) / 2;
-      for (let y = 0; y < h; y++) {
+      for (let y = 1; y < Math.max(2, h - 1); y++) {
         const half = Math.max(1, Math.floor((h - y) / 2.2));
-        for (let x = Math.max(0, cx - half); x <= Math.min(w - 1, cx + half); x++) {
-          const k = kc - 2.4 + (h - y) * 0.12 + (bay(x, y) - 0.5) * 0.9;
-          P.px(x, y, gel(k));
-        }
+        for (let x = Math.max(1, Math.round(cx - half)); x <= Math.min(w - 2, Math.round(cx + half)); x++) P.px(x, y, gel(k + 1));
       }
-      P.col(0, 0, h - 1, gel(kc - 4.6)); P.col(w - 1, 0, h - 1, gel(kc - 4.6));
-      P.row(h - 1, 0, w - 1, gel(kc - 4.8));
-      for (let i = 0; i < Math.max(2, Math.round(w / 4)); i++) {
-        const bx = 1 + Math.floor(hash(i, 2, P.seed) * Math.max(1, w - 4));
-        const by = 1 + Math.floor(hash(i, 3, P.seed) * Math.max(1, h - 4));
-        P.bubble3(bx, by, kc - 3.0);
-      }
-      P.px(1, 0, gel(kc - 1.4)); P.px(w - 2, 1, gel(kc - 1.8));
-      P.grit(Math.round(w * 0.4), kc - 3, 4);
+      P.col(0, 0, h - 1, gel(k - 1)); P.col(w - 1, 0, h - 1, gel(k - 1));
+      P.row(h - 1, 0, w - 1, gel(k - 1));
       return;
     }
-    // glossy top: dithered bright surface, specular blobs, darker outer curve
-    P.ramp(0, h - 1, kc + 1.0, kc - 1.4, (x, y, k) => P.px(x, y, gel(k)), 0.6);
-    P.row(0, 1, w - 2, gel(kc + 1.9));
-    P.row(h - 1, 0, w - 1, gel(kc - 2.2));
-    P.col(0, 0, h - 1, gel(kc - 0.9)); P.col(w - 1, 0, h - 1, gel(kc - 1.3));
-    const blobs = (w >= 8 && h >= 6) ? 2 : 1;
+    // glossy top: clumped mottling under a lit near edge and a shaded outer rim, with one or
+    // two soft specular pools (noise-shaped, not 2x2 squares).  The six dome layers step the
+    // tone between rings, so the tile itself only has to sell the material.
+    const k = Math.round(kc);
+    P.mottle(k, { scale: 0.58, amp: 2.6, drop: 0.8, jitter: 0.32 });
+    P.row(0, 0, w - 1, gel(k + 1));
+    P.row(h - 1, 0, w - 1, gel(k - 1));
+    P.col(0, 0, h - 1, gel(k - 1)); P.col(w - 1, 0, h - 1, gel(k - 1));
+    // a wet pool: a noise-shaped sheen, one texel hotter at its leading corner (the reference
+    // tops are sheened, never splattered with large flat white patches)
+    const blobs = (w >= 9 && h >= 7) ? 2 : 1;
     for (let i = 0; i < blobs; i++) {
-      const bx = 1 + Math.floor(hash(i, 4, P.seed) * Math.max(1, w - 4));
-      const by = 1 + Math.floor(hash(i, 5, P.seed) * Math.max(1, h - 3));
-      P.box(bx, by, Math.min(2, w - bx - 1), Math.min(2, h - by - 1), gel(kc + 2.6));
-      P.px(bx, by, GEL[GEL.length - 1]);
-      P.px(bx + 1, by, gel(kc + 2.0));
+      const bx = 2 + hash(i, 4, P.seed) * Math.max(1, w - 6);
+      const by = 2 + hash(i, 5, P.seed) * Math.max(1, h - 5);
+      P.blotch(k + (light > 0.75 ? 0.6 : 1.0), { x: bx, y: by, r: 2.2, squash: 0.8, seed: i * 37 });
+      P.px(Math.round(bx) - 1, Math.round(by) - 1, gel(k + (light > 0.75 ? 1.4 : 2.0)));
     }
-    if (w >= 7 && h >= 4) P.bubble3(1 + Math.floor(hash(6, 7, P.seed) * (w - 4)), h - 3, kc - 1.4);
-    P.grit(Math.max(2, Math.round(w * 0.3)), kc, 3);
   };
 
   painters.gel_down = function (p) {
     const { P } = p, w = P.w, h = P.h;
-    P.ramp(0, h - 1, 1.4, 0.6, (x, y, k) => P.px(x, y, gel(k)), 0.9);
+    // underside: the darkest body tone, only the middle catching a little bounce light
+    P.mottle(1, { scale: 0.7, amp: 0.9, drop: 0, jitter: 0.14 });
+    P.blotch(2.2, { r: Math.max(1.6, Math.min(w, h) / 2 - 0.8), squash: h / Math.max(1, w) });
+    P.blotch(3.0, { r: Math.max(0.9, Math.min(w, h) / 4), squash: h / Math.max(1, w), seed: 91 });
     P.outline(gel(0));
-    const cx = (w - 1) / 2, cy = (h - 1) / 2;
-    P.circle(cx, cy, Math.max(1.2, Math.min(w, h) / 2 - 0.6), gel(2.4));
-    P.circle(cx, cy, Math.max(0.8, Math.min(w, h) / 4), gel(3.2));
-    for (let i = 0; i < 5; i++) {
-      const bx = 1 + Math.floor(hash(i, 1, P.seed) * Math.max(1, w - 4));
-      const by = 1 + Math.floor(hash(i, 2, P.seed) * Math.max(1, h - 4));
-      P.bubble3(bx, by, 2.5);
-    }
-    for (let i = 0; i < 3; i++) {
-      const x = 2 + i * 4;
-      if (x < w) { P.col(x, 0, Math.max(2, Math.floor(h / 3)), gel(1.6)); P.px(x, 1, gel(3.2)); }
-    }
-    P.grit(Math.max(3, Math.round(w * h * 0.12)), 2.2, 4);
   };
 
   painters.gel_lid = function (p) {
     const { P } = p, w = P.w, h = P.h;
-    P.ramp(0, h - 1, 9.6, 4.4, (x, y, k) => P.px(x, y, gel(k)), 0.7);
-    P.row(0, 0, w - 1, gel(10.2));
-    P.px(1, 0, GEL[GEL.length - 1]); P.px(2, 0, gel(11.2)); P.px(w - 2, 0, gel(9.4));
-    P.col(0, 1, h - 1, gel(5.6)); P.col(w - 1, 1, h - 1, gel(5.0));
-    if (h > 1) P.row(h - 1, 0, w - 1, gel(3.8));
-    P.grit(Math.max(1, Math.round(w * 0.4)), 7, 4);
+    P.mottle(7, { scale: 0.75, amp: 1.1, drop: 0.5, jitter: 0.16 });
+    P.row(0, 0, w - 1, gel(9));
+    P.px(1, 0, gel(11)); P.px(2, 0, gel(10));
+    P.col(0, 0, h - 1, gel(5)); P.col(w - 1, 0, h - 1, gel(5));
+    if (h > 1) P.row(h - 1, 0, w - 1, gel(4));
   };
 
   painters.gel_streak = function (p) {
@@ -290,7 +351,6 @@ module.exports = function build(ctx) {
     P.ramp(0, P.h - 1, 10.4, 3.6, (x, y, k) => P.px(x, y, gel(k)), 0.8);
     P.col(1, 0, P.h - 1, gel(11.4));
     P.col(P.w - 1, 0, P.h - 1, gel(5.0));
-    P.grit(Math.max(2, Math.round(P.w * P.h * 0.2)), 8, 4);
   };
 
   // =====================================================================================
@@ -437,7 +497,8 @@ module.exports = function build(ctx) {
     for (const [Q, boost] of [[p.P, 0], [p.G, 1]]) {
       for (let y = 0; y < Q.h; y++) for (let x = 0; x < Q.w; x++) {
         const d = Math.hypot(x - (Q.w - 1) / 2, y - (Q.h - 1) / 2) / Math.max(1, Math.min(Q.w, Q.h) / 2);
-        Q.px(x, y, acid(3.6 + boost - d * 2.6 + (bay(x, y) - 0.5) * 0.9));
+        const n = fbm2(x * 0.8 + 3.1, y * 0.8 + 6.4, Q.seed);
+        Q.px(x, y, acid(3.6 + boost - d * 2.6 + (n - 0.5) * 1.1));
       }
       Q.px(1, 1, acid(4)); Q.px(2, 1, SH('acidPale', 6));
       Q.col(0, 0, Q.h - 1, acid(0.6)); Q.row(Q.h - 1, 0, Q.w - 1, acid(0.6));
@@ -446,7 +507,8 @@ module.exports = function build(ctx) {
   painters.acid_up = function (p) {
     for (const Q of [p.P, p.G]) {
       for (let y = 0; y < Q.h; y++) for (let x = 0; x < Q.w; x++) {
-        Q.px(x, y, acid(3.0 - y * 0.7 + (bay(x, y) - 0.5) * 0.9));
+        const n = fbm2(x * 0.85 + 1.7, y * 0.85 + 2.9, Q.seed);
+        Q.px(x, y, acid(3.0 - y * 0.7 + (n - 0.5) * 1.0));
       }
       Q.px(Math.max(1, Math.floor(Q.w / 2) - 1), 1, acid(4));
       Q.outline(acid(0));
@@ -466,7 +528,9 @@ module.exports = function build(ctx) {
   painters.crystal = function (p) {
     const { P, t } = p, w = P.w, h = P.h;
     const light = lightOf(t, 0.45);
-    P.ramp(0, h - 1, 0.6 + light, 0.2 + light, (x, y, k) => P.px(x, y, xtal(k)), 0.7);
+    // obsidian: clumped facet mottling (the reference shards are never a flat wash either),
+    // then a lit left edge, a shadowed right flank and a bright tip
+    P.mottle(0.5 + light + h * 0.055, { map: xtal, scale: 0.9, amp: 1.5, drop: 0.5, jitter: 0.12 });
     P.col(0, 0, h - 1, xtal(3));                     // lit facet edge
     P.col(1, 0, h - 1, xtal(2.2));
     if (w > 2) P.col(2, 0, h - 1, xtal(1.4));
@@ -483,7 +547,6 @@ module.exports = function build(ctx) {
     P.px(0, 0, xtal(5));
     P.px(Math.max(1, w - 3), Math.max(0, h - 2), xtal(2.6));
     P.px(1, Math.max(1, h - 3), xtal(1.8));
-    P.grit(Math.max(2, Math.round(w * h * 0.18)), 0.8 + light, 3);
   };
   painters.crystal_top = function (p) {
     const { P } = p, w = P.w, h = P.h;

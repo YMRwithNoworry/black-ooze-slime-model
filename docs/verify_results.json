@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-02T15:45:39.359Z",
+ "generated": "2026-10-02T16:17:00.823Z",
  "counts": {
   "critical": 0,
   "warning": 2,
@@ -14,7 +14,7 @@
     {
      "name": "parses",
      "ok": true,
-     "detail": "acid_gel_slime.bbmodel (820.4 KiB)"
+     "detail": "acid_gel_slime.bbmodel (819.5 KiB)"
     },
     {
      "name": "meta.format_version = 5.0",
@@ -141,7 +141,7 @@
     {
      "name": "standalone PNGs identical to embedded",
      "ok": true,
-     "detail": "sha256 f3614df53ebb / 3ba8b235c5ce"
+     "detail": "sha256 8345a90539ba / 41e785b7d3e0"
     },
     {
      "name": "base atlas has no transparent texel",
@@ -151,7 +151,7 @@
     {
      "name": "free atlas space is repaint-friendly (informational)",
      "ok": true,
-     "detail": "outside tiles: 13030 px, 48 distinct colours (swatch board + palette grid)"
+     "detail": "outside tiles: 13030 px, 44 distinct colours (swatch board + palette grid)"
     },
     {
      "name": "every declared tile is painted on the base atlas",
@@ -186,7 +186,7 @@
     {
      "name": "base atlas uses only PALETTE hues (SPEC 1)",
      "ok": true,
-     "detail": "19 distinct non-palette hexes (gradients/shading)"
+     "detail": "18 distinct non-palette hexes (gradients/shading)"
     }
    ]
   },
@@ -590,7 +590,7 @@
    "title": "the atlas has painted pixels outside every declared tile (harmless: nothing samples them)",
    "where": "tools/slime_texture.js",
    "fix": "optional: paint only inside the allocated tiles",
-   "detail": "10,15,20 x11308 | 184,247,221 x234 | 29,79,61 x141 | 18,56,48 x129",
+   "detail": "10,15,20 x11308 | 184,247,221 x225 | 29,79,61 x148 | 18,56,48 x133",
    "id": "I-02"
   },
   {

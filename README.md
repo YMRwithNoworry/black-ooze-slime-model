@@ -60,10 +60,23 @@ The closed grin only opens in `attack`/`roar` (plus a deliberately slack mouth i
 
 One 128×128 atlas painted by `tools/slime_texture.js`: 84 tiles, every texel opaque, every colour
 either a palette entry or `shade()` of one. The 7 dome layers carry `params.light` 0→1 so they
-continue a single 13-step mint→deep-teal ramp; tile tops get a lit rim, bottoms a dark rim, the
-lower gel gets bubbles, the upper gel wet streaks. The free space holds a **swatch board**
-(13-step tone ramp, a continuous ramp strip, an assembled dome/face reference, 5 texture cards and
-the full palette grid) so a human can repaint the model later without guessing.
+continue a single 13-step mint→deep-teal ramp.
+
+**Material, not static (the current pass).** The reference creatures in `refs/` are mottled over
+their whole surface, but the mottling arrives as *clumps* with wandering outlines — an earlier
+version of this atlas put flat tone inside a face and dropped two random 2×2 squares on top of it,
+which on screen read as scattered confetti rather than as gel. Every gel/obsidian tile is now
+painted by `P.mottle()`, a low-frequency value-noise field pushed through the palette ramp (the
+ramp's hard steps are what turn the smooth field into readable pixel clumps), and the large shapes
+are authored on top of it as *gravity-driven* features: a lit waterline along the tile's top edge,
+run-off streaks running down the taller faces, gel pooling dark along the bottom edge, and
+noise-shaped (never square) specular pools. Measured with the same metric as the reference
+(`build/ourstats.js`): the gel families average a 9.8 / 8.7 per-texel neighbour delta against the
+reference's 11.0, i.e. the same order of mottling density instead of a wash.
+
+The free space holds a **swatch board** (13-step tone ramp, a continuous ramp strip, an assembled
+dome/face reference, 5 texture cards and the full palette grid) so a human can repaint the model
+later without guessing.
 
 `acid_gel_slime_glow.png` is the emissive layer at identical UVs: alpha 0 everywhere except the
 eye irises/sparks, the core glow, the acid bulbs/beads/flecks and the crystal tips.
