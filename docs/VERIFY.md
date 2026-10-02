@@ -91,8 +91,11 @@ Run: `cd "C:/Users/Administrator/AppData/Local/Programs/Blockbench" && timeout 4
 
 Result: **the project loads.** Blockbench produced no error output of any kind (stdout/stderr
 empty) and wrote a fresh thumbnail (`thumbnails/0188119691.png`, 270x150) for the loaded project —
-it only renders one after a project parses cleanly. The thumbnail is 53.6 % mint-green with dark
-shard pixels, i.e. this model, and is kept in the repo as `docs/blockbench_thumbnail.png`.
+it only renders one after a project parses cleanly. That thumbnail is 59.4 % mint-green with 5.7k
+dark shard/eye pixels, i.e. unambiguously this model, and is kept in the repo as
+`docs/blockbench_thumbnail.png`. A second launch (after the last fixes) also loaded with an empty
+log; the extra thumbnail it wrote was not this model, so the first, verified one is the committed
+evidence.
 This also confirms the outliner fix end to end: the rig tree is built from `outliner` and the
 project is no longer loaded flat.
 
