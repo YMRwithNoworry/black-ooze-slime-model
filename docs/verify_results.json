@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-02T16:27:35.219Z",
+ "generated": "2026-10-02T16:48:47.839Z",
  "counts": {
   "critical": 0,
   "warning": 2,
@@ -14,7 +14,7 @@
     {
      "name": "parses",
      "ok": true,
-     "detail": "acid_gel_slime.bbmodel (819.7 KiB)"
+     "detail": "acid_gel_slime.bbmodel (819.3 KiB)"
     },
     {
      "name": "meta.format_version = 5.0",
@@ -141,7 +141,7 @@
     {
      "name": "standalone PNGs identical to embedded",
      "ok": true,
-     "detail": "sha256 4b7b6e907b46 / 41e785b7d3e0"
+     "detail": "sha256 241d762bc60d / 41e785b7d3e0"
     },
     {
      "name": "base atlas has no transparent texel",
@@ -590,7 +590,7 @@
    "title": "the atlas has painted pixels outside every declared tile (harmless: nothing samples them)",
    "where": "tools/slime_texture.js",
    "fix": "optional: paint only inside the allocated tiles",
-   "detail": "10,15,20 x11308 | 184,247,221 x232 | 23,69,58 x137 | 42,115,88 x132",
+   "detail": "10,15,20 x11308 | 184,247,221 x240 | 77,162,126 x153 | 47,120,92 x146",
    "id": "I-02"
   },
   {

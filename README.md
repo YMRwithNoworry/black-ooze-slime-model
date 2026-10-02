@@ -62,12 +62,34 @@ One 128×128 atlas painted by `tools/slime_texture.js`: 84 tiles, every texel op
 either a palette entry or `shade()` of one. The 7 dome layers carry `params.light` 0→1 so they
 continue a single 13-step mint→deep-teal ramp.
 
-**Material, not static (the current pass).** The reference creatures in `refs/` are mottled over
+**Jelly, not stone (the current pass).** Stone and jelly need *opposite* treatments, and the
+earlier passes kept painting stone onto a gel body: gravelly clumps, near-black pooled bottoms and
+a per-layer dark rim. The reference obsidian is gravelly; a gel body is smooth, wet and
+translucent. What now sells jelly at one texel per model unit:
+
+1. **The body lives in the light half of the ramp.** Mapping `params.light` straight onto the
+   whole 13-step ramp put the bottom layers on `gelRim`/`gelShadow` (#0e2c26 / #123830 — nearly
+   black), which is correct for obsidian and fatal for gel. `kc` is now `3.2 + light * 8`, so the
+   mass reads as a lit translucent body and the shading is carried by glints and rims instead of
+   by drowning the whole thing in shadow.
+2. **Translucency (`gloss({transmit})`).** Where the body is thin its top and bottom edges let
+   light through and brighten; where it is thick the middle absorbs and darkens. Opaque rock does
+   the exact opposite, which is what the model looked like before.
+3. **Rounded catch-lights.** A hard hot texel with its neighbours one step down, never a pasted
+   white square — the strongest "this is wet and smooth" cue available at this resolution.
+4. **No rim on every layer.** Eight stacked cubes each darkening along their own bottom edge is a
+   rock face; stacked gel has to read as one continuous surface, so the per-layer rim is off on
+   the dome sides (`rimRows: 0`).
+5. **Jitter stays a whisper.** The per-texel hash that "broke up" the surface is literal static at
+   one texel per model unit — that is what read as 乱 in the first place.
+
+**Material notes.** (The previous pass, kept for the record.) The reference creatures in `refs/` are mottled over
 their whole surface, but the mottling arrives as *clumps* with wandering outlines — an earlier
 version of this atlas put flat tone inside a face and dropped two random 2×2 squares on top of it,
 which on screen read as scattered confetti rather than as gel.
 
-Every gel/obsidian tile is now painted by `P.mottle()`: a low-frequency value-noise field pushed
+Obsidian keeps the gravelly treatment — that is correct for stone. Those tiles are painted by
+`P.mottle()`: a low-frequency value-noise field pushed
 through the palette ramp, where the ramp's hard steps turn the smooth field into readable pixel
 clumps. Three details turned out to matter more than the choice of noise:
 

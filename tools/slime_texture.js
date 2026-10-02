@@ -112,6 +112,57 @@ module.exports = function build(ctx) {
           for (let xx = 0; xx < w; xx++) put(xx, yy, k);
         }
       },
+      /** Jelly.  Stone and jelly need OPPOSITE treatments: the reference obsidian is gravelly
+          (clumps of near-black beside mid-grey), but a gel body is a smooth, wet, translucent
+          mass.  What sells jelly at one texel per model unit is not texture at all - it is
+          1) a calm, broad value ramp with almost no grain, 2) a hard, bright specular where the
+          surface turns up towards the light, and 3) a dark, saturated rim where the body
+          thickens and the light stops passing through.  Grain is added only as a whisper, so the
+          surface reads as smooth-but-organic rather than flat. */
+      gloss(k, o = {}) {
+        const bands = o.bands || (h <= 2 ? 1 : h <= 4 ? 2 : 3);
+        const lit = (o.lit === undefined ? 1.1 : o.lit);      // how much brighter the top edge is
+        const rim = (o.rim === undefined ? 1.5 : o.rim);      // how much darker the bottom edge is
+        const body = (o.body === undefined ? 1.0 : o.body);   // depth of the broad interior blob
+        // A rim on EVERY layer is what turned the dome into horizontal strata: eight stacked
+        // cubes each darkening along their own bottom edge is a rock face, not one smooth body.
+        // Stacked gel wants the opposite - the layers must read as a single continuous surface,
+        // so the per-layer rim is optional and off by default on the dome sides.
+        const rimRows = (o.rimRows === undefined ? 1 : o.rimRows);
+        // TRANSLUCENCY.  This is the cue that separates jelly from stone more than any other:
+        // where the body is thin (its top and bottom edges) light passes through and the gel
+        // glows; where it is thick (the middle) the light is absorbed and the gel darkens.
+        // Opaque rock does the exact opposite - dark at the bottom contact, flat through the
+        // middle - which is what this model looked like before.
+        const transmit = (o.transmit === undefined ? 0 : o.transmit);
+        for (let y = 0; y < h; y++) {
+          const t = h > 1 ? y / (h - 1) : 0;
+          const b = bands > 1 ? Math.min(bands - 1, Math.floor(t * bands)) : 0;
+          let kk = bands > 1 ? k + lit - (lit + rim) * (b / (bands - 1)) : k;
+          if (transmit && h >= 3) {
+            const edge = Math.min(t, 1 - t);              // 0 at the edges, 0.5 in the middle
+            kk += transmit * (0.5 - edge) * 2;            // thin edges brighter, thick middle darker
+          }
+          for (let x = 0; x < w; x++) P.px(x, y, gel(kk));
+        }
+        // one broad, soft interior swell: a jelly body is not a flat plate
+        if (w >= 3 && h >= 2) P.blotch(k + body, { x: (w - 1) / 2, y: Math.max(0, h * 0.35), r: Math.max(2, Math.min(w, h * 2) / 2), squash: h / Math.max(1, w), soft: 0.7, scale: 0.42 });
+        // A wet glint, shaped like a rounded catch-light rather than a pasted white square:
+        // one hot texel, its two neighbours one step down, and the diagonal two steps down.
+        // This is the single strongest "this is wet, smooth jelly" cue at this resolution.
+        const n = clamp(Math.round((w * h) / 40), 1, 2);
+        for (let i = 0; i < n; i++) {
+          const sx = 1 + Math.floor(hash(i, 41, P.seed) * Math.max(1, w - 3));
+          const sy = Math.floor(hash(i, 42, P.seed) * Math.max(1, Math.ceil(h * 0.4)));
+          P.px(sx, sy, gel(GEL.length - 1));
+          P.px(sx + 1, sy, gel(GEL.length - 2));
+          if (h >= 3) P.px(sx, sy + 1, gel(GEL.length - 2));
+          if (w >= 6) P.px(sx + 1, sy + 1, gel(k + lit * 1.5));
+        }
+        if (rimRows >= 1 && h >= 2) P.row(h - 1, 0, w - 1, gel(k - rim));
+        if (rimRows >= 2 && h >= 4) P.row(h - 2, 0, w - 1, gel(k - rim * 0.4));
+        if (w >= 6 && h >= 3) { P.col(0, 1, h - 2, gel(k - 0.6)); P.col(w - 1, 1, h - 2, gel(k - 0.6)); }
+      },
       /** Coherent mottling over the WHOLE tile - the general gel surface.
           This is the single most important style change: the reference models are mottled
           everywhere, but the mottling arrives as clumps with wandering outlines, not as one flat
@@ -223,7 +274,12 @@ module.exports = function build(ctx) {
   painters.gel_side = function (p) {
     const { P, t, r } = p, w = P.w, h = P.h;
     const light = lightOf(t, 0.3), part = (t.params && t.params.part) || 'dome';
-    const kc = light * (GEL.length - 1);
+    // Jelly is LIGHT.  Mapping layer light straight onto the whole 13-step ramp put the bottom
+    // layers near gelShadow/gelRim (#123830 - almost black obsidian), which is right for a stone
+    // body and wrong for gel: it made the mass read as rock no matter how it was painted.  The
+    // body now lives in the upper 3/4 of the ramp and the shading is carried by the glints and
+    // the thickened rim instead of by drowning the whole body in shadow.
+    const kc = 3.2 + light * (GEL.length - 1 - 3.8);
     const R = (y0, y1, a, b) => P.ramp(y0, y1, a, b, (x, y, k) => P.px(x, y, gel(k)));
 
     // Every gel surface is mottled over its WHOLE area in coherent clumps, then shaped by
@@ -273,32 +329,22 @@ module.exports = function build(ctx) {
       P.px(1, 0, gel(k + 3));
       return;
     }
-    // dome / lid / streak: the six dome layers already carry the vertical gradient
-    // (light 0.10 -> 0.92), so the tile supplies the material - full-coverage clumped
-    // mottling, a lit top edge, pooled shadow along the bottom edge, run-off streaks on the
-    // taller faces, one wet glint up high or one bubble down low.
+    // dome / lid / streak: JELLY, not stone.  The six dome layers already carry the vertical
+    // gradient (light 0.10 -> 0.92), so the tile only has to sell the material: a smooth wet
+    // body, a hard specular, and a dark thickened rim.  One run-off streak or bubble at most,
+    // placed deliberately - the previous gravelly mottling is what made this read as rock.
     const k = Math.round(kc);
-    // The reference stone shows a near-black pit right beside a mid-grey clump INSIDE one face;
-    // a layer that sits low on the ramp needs a wider spread to reach that contrast, because
-    // the dark end of the palette has much smaller luminance steps than the light end.
-    P.mottle(k, { scale: 0.6, amp: 2.0 + (1 - light) * 2.6, drop: 1.2, jitter: 0.1 });
-    P.bevel(k, 2, 2);
-    if (h >= 5 && w >= 6) {                         // gel running off the layer above
-      const n = 1 + Math.floor(hash(0, 21, P.seed) * 2);
-      for (let i = 0; i < n; i++) {
-        const x = 1 + Math.floor(hash(i, 22, P.seed) * (w - 2));
-        const y1 = Math.max(1, Math.floor(h * (0.25 + hash(i, 23, P.seed) * 0.4)));
-        P.col(x, 1, y1, gel(k + 1.2));
-        P.px(x, y1, gel(k + 2));
-      }
+    P.gloss(k, { lit: 0.6, rim: 0.4, body: 0.4, rimRows: 0, transmit: 1.6 });
+    if (h >= 5 && w >= 6 && light < 0.6) {          // a drip of gel hanging off the layer above
+      const x = 2 + Math.floor(hash(0, 22, P.seed) * Math.max(1, w - 4));
+      const y1 = Math.max(2, Math.floor(h * 0.5));
+      P.col(x, 0, y1, gel(k + 0.8));
+      P.px(x, y1, gel(k + 1.6));
     }
-    if (light > 0.5 && w >= 6 && h >= 5) {          // one 2-texel wet glint, only where it fits
-      const x = 1 + Math.floor(hash(0, 8, P.seed) * (w - 2));
-      P.px(x, 0, gel(k + 2)); P.px(x, 1, gel(k + 1));
-    }
-    if (light < 0.5 && w >= 8 && h >= 6) {          // one bubble, only on a tile tall enough
-      P.blotch(k + 0.9, { x: 1 + hash(3, 6, P.seed) * (w - 4), y: h - 3, r: 2.2, squash: 0.8 });
-      P.px(Math.max(1, Math.floor(1 + hash(3, 6, P.seed) * (w - 4)) - 1), Math.max(2, h - 4), gel(k - 1));
+    if (h >= 6 && w >= 8 && light < 0.5) {          // one suspended bubble, low on the body
+      const bx = 2 + hash(3, 6, P.seed) * (w - 5), by = h - 4;
+      P.blotch(k + 1.4, { x: bx, y: by, r: 2.2, squash: 0.8, soft: 0.5 });
+      P.px(Math.round(bx), Math.round(by), gel(k + 2.2));   // its little catch-light
     }
   };
 
@@ -307,7 +353,7 @@ module.exports = function build(ctx) {
     const part = (t.params && t.params.part) || 'dome';
     let light = lightOf(t, 0.85);
     if (part === 'skirt') light = Math.max(0, light - 0.45);
-    const kc = light * (GEL.length - 1) + 0.8;
+    const kc = 3.2 + light * (GEL.length - 1 - 3.8) + 0.8;
     if (h === 1) {   // single-row ridge (lip/knob tops): a sheen with clumped break-up
       const k = Math.round(kc);
       for (let x = 0; x < w; x++) {
@@ -330,22 +376,27 @@ module.exports = function build(ctx) {
       P.row(h - 1, 0, w - 1, gel(k - 1));
       return;
     }
-    // glossy top: clumped mottling under a lit near edge and a shaded outer rim, with one or
-    // two soft specular pools (noise-shaped, not 2x2 squares).  The six dome layers step the
-    // tone between rings, so the tile itself only has to sell the material.
+    // The rings that show between the dome layers are not shelves of rock - they are the layer
+    // edge seen THROUGH the gel above, so they stay close to the body tone with only a soft
+    // inner light.  Only the top cap is a real free surface and gets the big wet pool + hard
+    // highlight.  Painting every ring as a bright glossy plate is what produced the stone
+    // strata look.
     const k = Math.round(kc);
-    P.mottle(k, { scale: 0.46, amp: 2.4, drop: 0.9, jitter: 0.12 });
-    P.row(0, 0, w - 1, gel(k + 1));
-    P.row(h - 1, 0, w - 1, gel(k - 1));
-    P.col(0, 0, h - 1, gel(k - 1)); P.col(w - 1, 0, h - 1, gel(k - 1));
-    // a wet pool: a noise-shaped sheen, one texel hotter at its leading corner (the reference
-    // tops are sheened, never splattered with large flat white patches)
-    const blobs = (w >= 9 && h >= 7) ? 2 : 1;
-    for (let i = 0; i < blobs; i++) {
-      const bx = 2 + hash(i, 4, P.seed) * Math.max(1, w - 6);
-      const by = 2 + hash(i, 5, P.seed) * Math.max(1, h - 5);
-      P.blotch(k + (light > 0.75 ? 0.6 : 1.0), { x: bx, y: by, r: 2.2, squash: 0.8, seed: i * 37 });
-      P.px(Math.round(bx) - 1, Math.round(by) - 1, gel(k + (light > 0.75 ? 1.4 : 2.0)));
+    const topCap = light > 0.9 || (w <= 6 && h <= 6 && light > 0.84);
+    P.gloss(k, { lit: topCap ? 1.2 : 0.5, rim: 1.0, body: 0.5, rimRows: 0 });
+    if (topCap) {
+      const bx = 1 + hash(0, 4, P.seed) * Math.max(1, w - 4);
+      const by = 1 + hash(0, 5, P.seed) * Math.max(1, h - 4);
+      P.blotch(k + 1.2, { x: bx, y: by, r: Math.max(2.2, Math.min(w, h) * 0.35), squash: h / Math.max(1, w), soft: 0.6, scale: 0.38 });
+      P.px(Math.round(bx), Math.round(by), gel(GEL.length - 1));
+      if (w >= 6) P.px(Math.round(bx) + 1, Math.round(by), gel(GEL.length - 2));
+    } else {
+      // submerged edge: a soft sheen along the near edge only, no pasted white square
+      for (let x = 0; x < w; x++) {
+        const n = fbm2(x * 0.7 + 0.5, 0.5, P.seed + 5);
+        if (n > 0.58) P.px(x, 0, gel(k + 0.9));
+      }
+      if (h >= 3) P.row(1, 0, w - 1, gel(k + 0.3));
     }
   };
 
@@ -701,7 +752,10 @@ module.exports = function build(ctx) {
     for (let y = 0; y < 16; y++) for (let x = 0; x < 18; x++) box(c4.x + x, c4.y + y, 1, 1, XTAL[clamp(round(0.8 + (bay(x, y) - 0.5) * 0.9), 0, 5)]);
     for (let i = 0; i < 3; i++) { box(c4.x + 1 + i * 6, c4.y + 2, 4, 12, XTAL[2]); box(c4.x + 2 + i * 6, c4.y + 3, 1, 9, XTAL[4]); }
     const c5 = card(96, ly, 28, 20, 'ACID');
-    for (let i = 0; i < 5; i++) { box(c5.x + i * 5, c5.y + 8, 4, 8, ACID[i]); box(c5.x + i * 5, c5.y, 4, 6, GEL[i * 2.6]); }
+    for (let i = 0; i < 5; i++) {
+      box(c5.x + i * 5, c5.y + 8, 4, 8, ACID[i]);
+      box(c5.x + i * 5, c5.y, 4, 6, GEL[clamp(Math.round(i * 2.6), 0, GEL.length - 1)]);
+    }
     ly += 22;
 
     // --- palette grid: every named colour in tools/lib/canvas.js
