@@ -222,7 +222,19 @@ share a rotation but sit at different offsets); the CLI prints how many rotated 
   renders. What is *not* verified: the rig tree as drawn in the GUI, and an in-game test.
 * The earlier `black_ooze_slime.*` model from a previous brief is still in the repo, untouched.
 
-## 8. Examples
+## 8. Second model — 史莱姆少女 / Slime Girl
+
+The reference-sheet slime girl in this repo's root is a separate, self-contained build that shares
+the same toolkit (`tools/lib/`) but none of the acid slime's geometry or clips:
+
+* artifacts `slime_girl.bbmodel` / `.geo.json` / `.animation.json` / `.png` / `_glow.png`
+* sources `build_slimegirl.js` + `tools/sg_atlas.js` / `sg_geometry.js` / `sg_texture.js` / `sg_animations.js`
+* `node build_slimegirl.js`, `node tools/preview_slimegirl.js`, `node tools/verify_slimegirl.js`
+
+32 bones / 124 cubes / 7 clips, 2.44 blocks tall, 36 verifier checks passing. Full write-up in
+[SLIME_GIRL.md](SLIME_GIRL.md).
+
+## 9. Examples
 
 `examples/resource_pack/` holds a Bedrock client entity and a render controller (the emissive
 layer), both generated and cross-checked against the built geometry/animations — every bone named

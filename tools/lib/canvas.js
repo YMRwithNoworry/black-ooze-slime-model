@@ -21,6 +21,27 @@ const PALETTE = {
   tooth:      '#f4fbff', toothShade:'#c2d6e0', toothEdge:'#8aa3b0',
   // --- misc ---
   void:       '#0a0f14', bone:      '#e9f3f2', shadow:   '#12302c',
+
+  // ============ 史莱姆少女 / Slime Girl ============
+  // --- translucent blue gel hair (the whole silhouette is this material) ---
+  hairHi:     '#ebf9ff', hairLight: '#a9dcff', hairBase:  '#6fc0f7',
+  hairMid:    '#4f9ce8', hairDark:  '#356fc0', hairDeep:  '#1f4f96',
+  hairRim:    '#153a6b', hairCore:  '#0c2a55',
+  // --- pale anime skin ---
+  skinHi:     '#fff9fa', skin:      '#f9ecef', skinMid:   '#eed8dd',
+  skinShade:  '#d6b6bf', skinLine:  '#a9858f', skinDeep:  '#765862',
+  // --- eyes (deep blue -> cyan iris, white specular) ---
+  eyeLash:    '#0a0f1e', eyeOuter:  '#16204a', eyeIris:   '#2f4bb0',
+  eyeIrisHi:  '#4d7fe0', eyeGlow:   '#8fe3ff', eyeGlowHi: '#e6fbff',
+  sgEyeSpark: '#ffffff', eyeRim:    '#a8c8ff', blush:     '#e9a6b6',
+  blushHi:    '#f7c8d2', mouthDark: '#4a2233', mouthIn:   '#7d3247',
+  // --- black navy dress / boots ---
+  clothHi:    '#4c5878', cloth:     '#2e3654', clothMid:  '#232a44',
+  clothDark:  '#1a2036', clothDeep: '#111527', clothEdge: '#080b14',
+  // --- slime-girl cube gel (sgel*: the shared acid palette already owns gel*) ---
+  sgelHi:     '#ecfdff', sgel:      '#b6ecff', sgelMid:   '#78d3f5',
+  sgelDark:   '#3fa3d6', sgelDeep:  '#2c6fa3', sgelRim:   '#1d4a73',
+  sgelCore:   '#d8f7ff',
 };
 
 function hexToRgb(hex) {

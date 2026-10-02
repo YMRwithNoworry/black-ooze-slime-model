@@ -1,0 +1,48 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "slime_girl:slime_girl",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/slime_girl/slime_girl"
+      },
+      "geometry": {
+        "default": "geometry.slime_girl"
+      },
+      "animations": {
+        "idle": "animation.slime_girl.idle",
+        "move": "animation.slime_girl.move",
+        "attack": "animation.slime_girl.attack",
+        "skill": "animation.slime_girl.skill",
+        "spawn": "animation.slime_girl.spawn",
+        "death": "animation.slime_girl.death",
+        "sit": "animation.slime_girl.sit"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "idle": "query.is_on_ground && !query.is_moving"
+          },
+          {
+            "move": "query.is_moving"
+          },
+          {
+            "attack": "variable.attack_time > 0.0"
+          },
+          {
+            "skill": "variable.skill_time > 0.0"
+          },
+          {
+            "sit": "query.is_sitting"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.slime_girl"
+      ]
+    }
+  }
+}
