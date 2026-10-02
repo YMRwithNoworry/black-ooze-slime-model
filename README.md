@@ -121,6 +121,7 @@ clips). Change a number, rerun the build, and the project, the exports and the r
 * **Two verifier warnings are intentional**: `spawn`/`death` deform the puddle by >4 units
   (that *is* the collapse), and `idle`/`move` do not end on the rest pose because they are loops —
   the correct invariant there is first key == last key, which holds for every channel.
-* **Not verified here**: opening the project in the Blockbench GUI and an in-game test. The
-  `.bbmodel` was validated structurally and against Blockbench's own loader/exporter source.
+* **Blockbench load test passed**: launching the installed Blockbench with the project produces no
+  error output and a fresh 270x150 thumbnail (`docs/blockbench_thumbnail.png`) — it parses and
+  renders. What is *not* verified: the rig tree as drawn in the GUI, and an in-game test.
 * The earlier `black_ooze_slime.*` model from a previous brief is still in the repo, untouched.

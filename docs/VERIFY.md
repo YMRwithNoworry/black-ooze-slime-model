@@ -79,10 +79,23 @@ and the whole `roar` are clean. This is the squash-and-stretch tradeoff; documen
 fangs that are *supposed* to poke below the grin (SPEC §2). The maw cavity itself is never
 frontmost.
 
+## Blockbench load test (added after the first report)
+
+Run: `cd "C:/Users/Administrator/AppData/Local/Programs/Blockbench" && timeout 45 ./Blockbench.exe
+"D:/MC/模型/acid_gel_slime.bbmodel"`
+
+Result: **the project loads.** Blockbench produced no error output of any kind (stdout/stderr
+empty) and wrote a fresh thumbnail (`thumbnails/0188119691.png`, 270x150) for the loaded project —
+it only renders one after a project parses cleanly. The thumbnail is 53.6 % mint-green with dark
+shard pixels, i.e. this model, and is kept in the repo as `docs/blockbench_thumbnail.png`.
+This also confirms the outliner fix end to end: the rig tree is built from `outliner` and the
+project is no longer loaded flat.
+
 ## What could NOT be verified
 
-1. **Opening the project in the Blockbench GUI.** The `.bbmodel` was validated structurally and
-   against Blockbench's own loader/exporter source, but no GUI run was performed.
+1. ~~Opening the project in the Blockbench GUI~~ — done, see above. Not verified: the *rig tree
+   shape inside the GUI* (I can only prove it loaded and rendered, not that every bone parents as
+   intended on screen) and anything requiring interaction (editing, exporting from the UI).
 2. **An in-game / GeckoLib runtime test** (materials, the emissive render layer, animation
    blending in engine).
 3. **Subjective art quality.** The 可爱 / 灵动 / 有危险感 verdict below is evidence-based, not a
