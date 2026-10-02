@@ -1,0 +1,45 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "acid_gel_slime",
+      "materials": {
+        "default": "entity_alphatest",
+        "glow": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/acid_gel_slime/acid_gel_slime",
+        "glow": "textures/entity/acid_gel_slime/acid_gel_slime_glow"
+      },
+      "geometry": {
+        "default": "geometry.acid_gel_slime"
+      },
+      "animations": {
+        "idle": "animation.acid_gel_slime.idle",
+        "move": "animation.acid_gel_slime.move",
+        "attack": "animation.acid_gel_slime.attack",
+        "roar": "animation.acid_gel_slime.roar",
+        "spawn": "animation.acid_gel_slime.spawn",
+        "death": "animation.acid_gel_slime.death"
+      },
+      "scripts": {
+        "animate": [
+          "idle",
+          {
+            "move": "query.modified_move_speed > 0.05"
+          },
+          {
+            "roar": "variable.attack_time > 0.0"
+          },
+          "spawn"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.acid_gel_slime"
+      ],
+      "spawn_egg": {
+        "texture": "acid_gel_slime"
+      }
+    }
+  }
+}

@@ -128,3 +128,10 @@ clips). Change a number, rerun the build, and the project, the exports and the r
   error output and a fresh 270x150 thumbnail (`docs/blockbench_thumbnail.png`) — it parses and
   renders. What is *not* verified: the rig tree as drawn in the GUI, and an in-game test.
 * The earlier `black_ooze_slime.*` model from a previous brief is still in the repo, untouched.
+
+## 7. Examples
+
+`examples/resource_pack/` holds a Bedrock client entity and a render controller (the emissive
+layer), both generated and cross-checked against the built geometry/animations — every bone named
+in the controller exists in the rig and every animation state exists in the clips. See
+`examples/README.md` for where each file goes.

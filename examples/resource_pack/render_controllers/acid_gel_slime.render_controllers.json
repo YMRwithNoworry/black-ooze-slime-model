@@ -1,0 +1,52 @@
+{
+  "format_version": "1.10.0",
+  "render_controllers": {
+    "controller.render.acid_gel_slime": {
+      "geometry": "Geometry.default",
+      "textures": [
+        "Texture.default"
+      ],
+      "materials": [
+        {
+          "*": "Material.default"
+        },
+        {
+          "eye_l": "Material.glow"
+        },
+        {
+          "eye_r": "Material.glow"
+        },
+        {
+          "core": "Material.glow"
+        },
+        {
+          "bulb_l": "Material.glow"
+        },
+        {
+          "bulb_r": "Material.glow"
+        },
+        {
+          "bead_l": "Material.glow"
+        },
+        {
+          "bead_r": "Material.glow"
+        },
+        {
+          "crystal_1": "Material.glow"
+        },
+        {
+          "crystal_2": "Material.glow"
+        },
+        {
+          "crystal_3": "Material.glow"
+        },
+        {
+          "crystal_4": "Material.glow"
+        },
+        {
+          "crystal_5": "Material.glow"
+        }
+      ]
+    }
+  }
+}
