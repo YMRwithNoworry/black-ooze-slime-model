@@ -189,6 +189,33 @@ class Model {
   }
 }
 
+/** Tolerance-based keyframe simplifier (per channel, in channel units).
+ *  Only runs of keys WITHOUT easing are thinned: a key is dropped when the chord between the
+ *  kept neighbours stays within tolerance on every axis, so eased (hand-authored) curves are
+ *  never touched. This is what keeps the sampled trailing-chain channels from bloating the
+ *  exported file. */
+function simplifyKeys(keys, tol) {
+  if (keys.length <= 2) return keys;
+  const out = [keys[0]];
+  let anchor = 0;
+  for (let i = 1; i < keys.length - 1; i++) {
+    let eased = false;
+    for (let j = anchor; j <= i; j++) if (keys[j].length > 2) { eased = true; break; }
+    if (eased) { out.push(keys[i]); anchor = i; continue; }
+    const t0 = keys[anchor][0], t1 = keys[i + 1][0], v0 = keys[anchor][1], v1 = keys[i + 1][1];
+    let ok = true;
+    for (let k = anchor + 1; k <= i && ok; k++) {
+      const u = t1 === t0 ? 0 : (keys[k][0] - t0) / (t1 - t0);
+      for (let c = 0; c < 3; c++) {
+        if (Math.abs(keys[k][1][c] - (v0[c] + (v1[c] - v0[c]) * u)) > tol[c]) { ok = false; break; }
+      }
+    }
+    if (!ok) { out.push(keys[i]); anchor = i; }
+  }
+  out.push(keys[keys.length - 1]);
+  return out;
+}
+
 class AnimationSet {
   constructor(identifier) { this.identifier = identifier; this.clips = []; }
   /**
@@ -201,7 +228,8 @@ class AnimationSet {
       const channels = opts.bones[boneName];
       const out = {};
       for (const ch of Object.keys(channels)) {
-        const entries = channels[ch];
+        const tol = ch === 'rotation' ? [0.35, 0.35, 0.35] : (ch === 'position' ? [0.02, 0.02, 0.02] : [0.004, 0.004, 0.004]);
+        const entries = simplifyKeys(channels[ch], tol);
         const chObj = {};
         for (const entry of entries) {
           // lagged channels (trailing lobes/antennae/drips) may push a key past the end of the

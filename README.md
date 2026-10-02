@@ -112,9 +112,12 @@ clips). Change a number, rerun the build, and the project, the exports and the r
   0 mismatches); the verifier re-implements them independently and reproduces the round trip on
   the reference pair (39/39 faces). A real bug this caught: the outliner tree must live in
   `outliner` (not in the group records) or Blockbench loads the project flat — fixed.
-* **Animation file size.** `acid_gel_slime.animation.json` is ~266 KB because the trailing chains
-  are sampled (8 keys per cycle) rather than hand-keyed. It parses instantly, but if you want a
-  smaller file, raise the sampler `step` in `tools/slime_animations.js` from 0.25 to 0.5.
+* **Animation file size.** `acid_gel_slime.animation.json` is 244 KB: the trailing chains are
+  *sampled* (8 keys per cycle) instead of hand-keyed, because that lag is the whole point of the
+  lively feel. A tolerance-based simplifier in `tools/lib/model.js` already drops every key that
+  lies within 0.35° / 0.004 of the chord between its neighbours (verified: worst shape deviation
+  0.316°, and no eased curve is ever touched); raising the sampler `step` in
+  `tools/slime_animations.js` from 0.25 to 0.5 would halve it again at some cost in smoothness.
 * **Small ground dips.** During the most violent frames the mesh dips up to 0.75 units below the
   ground plane (`spawn` −0.73, `death` −0.75, `attack` −0.47, `idle` −0.37, `move` −0.38). The
   rest pose, and the whole `roar`, are clean. It is a squash-and-stretch tradeoff, not a rig error.

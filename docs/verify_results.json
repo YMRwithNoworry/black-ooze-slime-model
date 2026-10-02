@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-02T14:52:27.122Z",
+ "generated": "2026-10-02T14:55:09.176Z",
  "counts": {
   "critical": 0,
   "warning": 4,
@@ -14,7 +14,7 @@
     {
      "name": "parses",
      "ok": true,
-     "detail": "acid_gel_slime.bbmodel (867.5 KiB)"
+     "detail": "acid_gel_slime.bbmodel (818.6 KiB)"
     },
     {
      "name": "meta.format_version = 5.0",
@@ -342,7 +342,7 @@
     {
      "name": "clip idle: keyframe times inside animation_length",
      "ok": true,
-     "detail": "len 4, 645 keys"
+     "detail": "len 4, 526 keys"
     },
     {
      "name": "clip idle: animated bones exist in the geo",
@@ -717,13 +717,13 @@
      "len": 4,
      "loop": true,
      "bones": 28,
-     "keys": 645,
+     "keys": 526,
      "worst": 0.79,
      "worstBone": "lobe_r",
      "worstT": 1,
      "endDev": 11.273,
      "minYmid": -0.37,
-     "maxAbs": 2.82
+     "maxAbs": 2.8
     },
     "move": {
      "len": 1,
