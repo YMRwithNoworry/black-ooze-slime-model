@@ -8,7 +8,13 @@ const { bbFaceUV, geoFaceUV, FACES } = require('./atlas.js');
 // Tile families that live on the second (emissive) texture.
 const GLOW_FAMILIES = new Set(['eye_glow', 'eye_spark', 'core_glow', 'acid_glow', 'acid_up', 'crystal_glow', 'acid_fleck']);
 
-function guid() { return crypto.randomUUID(); }
+/** Deterministic, UUID-shaped id derived from a seed: rebuilding the model reproduces the exact
+ *  same file (clean diffs, meaningful git history) while every id stays unique and valid. */
+function guid(seed) {
+  if (!seed) return crypto.randomUUID();
+  const h = crypto.createHash('md5').update(String(seed)).digest('hex');
+  return h.slice(0, 8) + '-' + h.slice(8, 12) + '-4' + h.slice(13, 16) + '-a' + h.slice(17, 20) + '-' + h.slice(20, 32);
+}
 
 class Model {
   constructor(opts = {}) {
@@ -29,7 +35,7 @@ class Model {
     if (parent && !this._boneByName.has(parent)) throw new Error('bone ' + name + ': parent ' + parent + ' must be declared first');
     const b = {
       name: name, parent: parent,
-      uuid: opts.uuid || guid(),
+      uuid: opts.uuid || guid('bone:' + name),
       pivot: opts.pivot || [0, 0, 0],
       rotation: opts.rotation || [0, 0, 0],
       color: this.bones.length % 10,
@@ -101,7 +107,7 @@ class Model {
       const el = {
         name: c.name, box_uv: false, render_order: 'default', locked: false, export: true, scope: 0,
         allow_mirror_modeling: true, from: c.from.slice(), to: c.to.slice(), autouv: 0, color: c.color,
-        origin: c.origin.slice(), faces: faces, type: 'cube', uuid: guid(),
+        origin: c.origin.slice(), faces: faces, type: 'cube', uuid: guid('cube:' + c.name),
       };
       if (c.inflate) el.inflate = c.inflate;
       if (c.rotation.some(v => v)) el.rotation = c.rotation.slice();
@@ -129,7 +135,7 @@ class Model {
       width: this.resolution.width, height: this.resolution.height,
       uv_width: this.resolution.width, uv_height: this.resolution.height,
       particle: false, use_as_default: i === 0, layers_enabled: false, internal: true, saved: false,
-      uuid: guid(), source: 'data:image/png;base64,' + t.png.toString('base64'),
+      uuid: guid('tex:' + t.name), source: 'data:image/png;base64,' + t.png.toString('base64'),
       render_mode: t.renderMode || 'default', render_sides: 'auto', pbr_channel: 'color', wrap_mode: 'repeat',
       fps: 10, frame_time: 1, frame_order_type: 'loop', frame_interpolate: false, visible: true,
     }));
@@ -267,7 +273,7 @@ class AnimationSet {
             const kf = {
               channel: ch, time: parseFloat(time), color: -1, uniform: ch === 'scale',
               interpolation: 'linear', data_points: [{ x: data.vector[0], y: data.vector[1], z: data.vector[2] }],
-              uuid: guid(),
+              uuid: guid('kf:' + c.name + ':' + boneName + ':' + ch + ':' + time),
             };
             if (data.easing) kf.easing = data.easing;
             keyframes.push(kf);
@@ -277,7 +283,7 @@ class AnimationSet {
         animators[boneUuid(boneName)] = { name: boneName, type: 'bone', keyframes: keyframes };
       }
       out.push({
-        uuid: guid(), name: c.name,
+        uuid: guid('anim:' + c.name), name: c.name,
         loop: c.tag.loop === true ? 'loop' : (c.tag.loop === 'hold_on_last_frame' ? 'hold' : 'once'),
         override: false, selected: false, length: c.tag.animation_length, snapping: 24,
         animators: animators, markers: [], type: 'animation', path: '',
