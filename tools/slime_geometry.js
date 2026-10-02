@@ -96,7 +96,7 @@ module.exports = function build(ctx) {
     const [n, y0, y1, aHalf, aDepth, bHalf, bDepth] = L;
     const h = y1 - y0;
     const top = i === DOME.length - 1;
-    const upT = top ? F('gel_top_ring', [2 * aHalf, 2 * aDepth]) : SEAM;
+    const upT = top ? F('gel_top_ring', [2 * aHalf, 2 * aDepth]) : F('gel_top_L' + (i + 1) + '_a', [2 * aHalf, 2 * aDepth]);
     const downT = i === 0 ? F('gel_under', [2 * aHalf, 2 * aDepth]) : SEAM;
     model.cube('dome', n + '_a', [-aHalf, y0, -aDepth], [aHalf, y1, aDepth], {
       north: F('gel_' + n + '_long', [2 * aHalf, h]), south: F('gel_' + n + '_long', [2 * aHalf, h]),
@@ -106,7 +106,7 @@ module.exports = function build(ctx) {
     model.cube('dome', n + '_b', [-bHalf, y0, -bDepth], [bHalf, y1, bDepth], {
       north: F('gel_' + n + '_short', [2 * bHalf, h]), south: F('gel_' + n + '_short', [2 * bHalf, h]),
       east: F('gel_' + n + '_long', [2 * bDepth, h]), west: F('gel_' + n + '_long', [2 * bDepth, h]),
-      up: top ? F('gel_top_ring_b', [2 * bHalf, 2 * bDepth]) : SEAM,
+      up: top ? F('gel_top_ring_b', [2 * bHalf, 2 * bDepth]) : F('gel_top_L' + (i + 1) + '_b', [2 * bHalf, 2 * bDepth]),
       down: SEAM,
     }, Q);
   });
@@ -227,7 +227,7 @@ module.exports = function build(ctx) {
     model.cube('bulb_' + s, 'bulb_' + s, [px[0] - 1, 21.5, -2], [px[0] + 1, 23.5, 0], {
       north: F('acid_bulb', [2, 2]), south: F('acid_bulb', [2, 2]),
       east: F('acid_bulb', [2, 2]), west: F('acid_bulb', [2, 2]),
-      up: F('acid_bulb_up', [2, 2]), down: null,
+      up: F('acid_bulb_up', [2, 2]), down: F('acid_bulb', [2, 2]),
     }, { rotation: [0, 0, tilt], origin: px, quiet: true });
   }
 
@@ -256,7 +256,7 @@ module.exports = function build(ctx) {
     model.cube(name, name + '_sclera', sc, [Math.max(sx(5), sx(1)), 12, -7.4], {
       north: F('eye_sclera', [4, 4]), south: V,
       east: F('eye_sclera', [2.1, 4]), west: F('eye_sclera', [2.1, 4]),
-      up: SEAM, down: SEAM,
+      up: F('eye_top', [4, 2.1]), down: SEAM,
     }, Q);
     model.cube(name, name + '_iris',
       [Math.min(sx(4.5), sx(1.5)), 8.9, -9.62], [Math.max(sx(4.5), sx(1.5)), 11.3, -9.52], {

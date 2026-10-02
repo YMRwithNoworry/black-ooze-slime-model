@@ -32,6 +32,12 @@ function build() {
   }
   A.alloc('gel_top_ring_b', 6, 8, 'gel_up', { light: 0.88 });
   A.alloc('gel_top_cap', 5, 5, 'gel_up', { light: 0.96 });   // L7 top
+  // exposed top rings of every dome layer (visible from above, they carry the gradient)
+  const ring=[[1,18,12,12,18,0.22],[2,17,11,11,17,0.36],[3,15,10,10,15,0.50],[4,13,9,9,13,0.64],[5,10,7,7,10,0.78]];
+  for (const [n,aw,ad,bw,bd,li] of ring) {
+    A.alloc('gel_top_L' + n + '_a', aw, ad, 'gel_up', { light: li });
+    A.alloc('gel_top_L' + n + '_b', bw, bd, 'gel_up', { light: li });
+  }
   A.alloc('gel_top_ring', 8, 6, 'gel_up', { light: 0.86 });  // L6 exposed top ring
   A.alloc('gel_under', 18, 12, 'gel_down', { light: 0.02 });  // L1 underside
 
@@ -62,6 +68,7 @@ function build() {
 
   // ---------- eyes ----------
   A.alloc('eye_sclera', 4, 4, 'eye', {});
+  A.alloc('eye_top', 4, 2, 'eye', {});   // the eye's upper curve, visible from above
   A.alloc('eye_iris', 3, 3, 'eye_glow', {});
   A.alloc('eye_spark', 2, 2, 'eye_spark', {});
   A.alloc('eye_lid', 4, 1, 'gel_lid', {});

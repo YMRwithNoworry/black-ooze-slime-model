@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-02T14:47:02.892Z",
+ "generated": "2026-10-02T14:52:27.122Z",
  "counts": {
   "critical": 0,
   "warning": 4,
@@ -141,7 +141,7 @@
     {
      "name": "standalone PNGs identical to embedded",
      "ok": true,
-     "detail": "sha256 eac2ee085132 / abaf6c96a4bf"
+     "detail": "sha256 530b30da97dd / a44ca7219f06"
     },
     {
      "name": "base atlas has no transparent texel",
@@ -151,17 +151,17 @@
     {
      "name": "atlas background outside tiles is one flat colour",
      "ok": false,
-     "detail": "95,199,155 dominant 10222/14518 px, 48 distinct colours outside the tiles"
+     "detail": "95,199,155 dominant 11416/13030 px, 45 distinct colours outside the tiles"
     },
     {
      "name": "every declared tile is painted on the base atlas",
      "ok": true,
-     "detail": "73 tiles painted"
+     "detail": "84 tiles painted"
     },
     {
      "name": "no unpainted pixel inside claimed tiles (accept. crit. 5)",
-     "ok": true,
-     "detail": "86 background-coloured px inside tiles of 1866"
+     "ok": false,
+     "detail": "303 background-coloured px inside tiles of 3354"
     },
     {
      "name": "glow atlas transparent outside glow tiles",
@@ -181,7 +181,7 @@
     {
      "name": "unused pixels outside claimed tiles are not painted on the base atlas",
      "ok": true,
-     "detail": "claimed-region background px 86"
+     "detail": "claimed-region background px 303"
     },
     {
      "name": "base atlas uses only PALETTE hues (SPEC 1)",
@@ -253,7 +253,7 @@
     {
      "name": "per-face uv matches the verified convention",
      "ok": true,
-     "detail": "438 faces"
+     "detail": "440 faces"
     },
     {
      "name": "no face present in geo but absent in bbmodel",
@@ -270,12 +270,12 @@
     {
      "name": "build/report.json declares the tile list",
      "ok": true,
-     "detail": "73 tiles"
+     "detail": "84 tiles"
     },
     {
      "name": "declared tile rects reproduce the shelf packer",
      "ok": true,
-     "detail": "73 tiles packed"
+     "detail": "84 tiles packed"
     },
     {
      "name": "tiles do not overlap",
@@ -285,7 +285,7 @@
     {
      "name": "all uv rects inside 0..128",
      "ok": true,
-     "detail": "438 faces checked"
+     "detail": "440 faces checked"
     },
     {
      "name": "every face rect is covered by a declared (painted) tile",
@@ -300,7 +300,7 @@
     {
      "name": "no painted tile is left unused by every face",
      "ok": true,
-     "detail": "73/73 tiles used"
+     "detail": "84/84 tiles used"
     },
     {
      "name": "uv size == face size (>0.5 tolerance, whitelisted seam/void/thin)",
@@ -315,7 +315,7 @@
     {
      "name": "thin-detail / seam stretches only on whitelisted families",
      "ok": true,
-     "detail": "100 whitelisted stretch(es)"
+     "detail": "88 whitelisted stretch(es)"
     }
    ]
   },
@@ -608,7 +608,7 @@
    "title": "the atlas has painted pixels outside every declared tile (harmless: nothing samples them)",
    "where": "tools/slime_texture.js",
    "fix": "optional: paint only inside the allocated tiles",
-   "detail": "95,199,155 x10222 | 14,42,36 x1013 | 184,247,221 x490 | 11,36,31 x336",
+   "detail": "95,199,155 x11416 | 184,247,221 x236 | 23,69,58 x134 | 18,56,48 x129",
    "id": "I-02"
   },
   {
@@ -688,27 +688,27 @@
     199,
     155
    ],
-   "tiles": 73,
-   "claimedPx": 1866,
+   "tiles": 84,
+   "claimedPx": 3354,
    "glowPx": 73,
    "glowOutside": 0
   },
   "g3": {
    "bones": 38,
    "cubes": 76,
-   "faces": 438,
+   "faces": 440,
    "uvBad": 0,
    "orderBadBones": []
   },
   "g4": {
-   "tiles": 73,
-   "used": 73,
+   "tiles": 84,
+   "used": 84,
    "unused": 0,
-   "faces": 438,
-   "claimedPx": 1866,
+   "faces": 440,
+   "claimedPx": 3354,
    "atlasPct": null,
    "stretched": 0,
-   "thinWhitelisted": 100,
+   "thinWhitelisted": 88,
    "unusedNames": []
   },
   "g5": {

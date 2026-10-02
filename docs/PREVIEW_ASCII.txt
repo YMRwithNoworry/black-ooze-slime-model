@@ -1,0 +1,122 @@
+
+================ acid_gel_slime — ASCII preview (1 char = 1 model unit) ================
+legend: # solid   accent map letters = the material of the surface actually visible from that direction
+
+  FRONT  (camera at -Z, looking +Z; image right = -X, up = +Y : you are face to face with the slime)
+     accent map: G gel  A acid  E eye  C crystal  T tooth  M maw/mouth  K core  ? hidden tile
+  y 24 |                                |   |                                |
+  y 23 |                                |   |                                |
+  y 22 |              #  #              |   |              A  A              |
+  y 21 |            ######## ###        |   |            GGAAAAGG CCC        |
+  y 20 |           #############        |   |           GGGGGGGGGGCCC        |
+  y 19 |            ############        |   |            GGGGGGGGCCCC        |
+  y 18 |             #####  ####        |   |             GGGGG  CCCC        |
+  y 17 |            ############        |   |            GGGGGGGGCCCC        |
+  y 16 |            ###########         |   |            GGGGGGGGCCC         |
+  y 15 |           ############         |   |           GGGGGGGGGGCC         |
+  y 14 | ###       ##########           |   | AAA       GGGGGGGGGG           |
+  y 13 | ###     #############     ###  |   | AAA     GGGGGGGGGGGGG     AAA  |
+  y 12 | #####################     ###  |   | AAGGGGGGGGGGGGGGGGGGG     AAA  |
+  y 11 |   ###########################  |   |   GGGGGGGGEEEEGGEEEEGGGGGGAAA  |
+  y 10 |   #########################    |   |   GGGGGGGGEEEEGGEEEEGGGGGGG    |
+  y  9 |   #########################    |   |   GGGGGGGGEEEEGGEEEEGGGGGGG    |
+  y  8 |  ###########################   |   |  GGGGGGGGGEEEEGGEEEEGGGGGGGG   |
+  y  7 |  ###########################   |   |  GGGGGGGGGGMMMMMMMGGGGGGGGGG   |
+  y  6 |  ###########################   |   |  GGGGGGGGGGMMMMMMMGGGGGGGGGG   |
+  y  5 |  ###########################   |   |  GGGGGGGGGGMMGGGMMGGGGGGGGGG   |
+  y  4 |  ###########################   |   |  GGGGGGGGGGMMGGGMMGGGGGGGGGG   |
+  y  3 |  ###########################   |   |  GGGGGGGGGGGKAAAAKGGGGGGAAAG   |
+  y  2 |   #########################    |   |   GGGGGGGGGGGAAAAGGGGGGGGGA    |
+  y  1 |   #########################    |   |   GGGGGGGGGGGAAAAGGGGGGGGGA    |
+  y  0 |     #######################    |   |     GGGGGGGGGAAAAGGGGGGGGGA    |
+  y -1 |                                |   |                                |
+         +-+----+----+----+----+----+----++
+           15   10   5    0    -5   -10  -15   <- x  (+X on the LEFT)  (vertical axis = y)
+
+  SIDE   (camera at +X, looking -X; image right = -Z, up = +Y : nose on the right)
+     accent map: G gel  A acid  E eye  C crystal  T tooth  M maw/mouth  K core  ? hidden tile
+  y 24 |                            |   |                            |
+  y 23 |                            |   |                            |
+  y 22 |             ###            |   |             GGG            |
+  y 21 |         #######            |   |         CCCCGGG            |
+  y 20 |         ########           |   |         CCGG???G           |
+  y 19 |         ########           |   |         CCGG???G           |
+  y 18 |         #######            |   |         CCGG???            |
+  y 17 |         #########          |   |         CGGGGGGGG          |
+  y 16 |          ########          |   |          GGGGGGGG          |
+  y 15 |     #   ##########         |   |     C   GGGGGGGGGG         |
+  y 14 |    ###  ##########         |   |    CCC  AAAGGGGGGG         |
+  y 13 |    ################  #     |   |    CCCGGAAAGGGGGGGG  ?     |
+  y 12 |  ##################  ##    |   |  CCCCCGGAAAGGGGGGGG  ?G    |
+  y 11 |  #####################     |   |  CCCCGGGGGGGGGGGGGGGEE     |
+  y 10 |  ######################    |   |  GGGGGGGGGGGGGGGGGGGEEE    |
+  y  9 |  ######################    |   |  GGGGGGGGGGGGGGGGGGGEEE    |
+  y  8 |  #####################     |   |  GGGGGGGGGGGGGGGGGGGGE     |
+  y  7 |  ######################    |   |  GGGGGGGGGGGGGGGGGGGGMM    |
+  y  6 |  ######################    |   |  GGGGGGGGGGGGGGGGGGGGMM    |
+  y  5 |  #######################   |   |  GGGGGGGGGGGGGGGGGGGGGMG   |
+  y  4 |  #######################   |   |  GGGGGGAAAGGGGGGGGGGGGMG   |
+  y  3 |  ########################  |   |  GGGGGGAAAGGGGGGGGGGGGKAA  |
+  y  2 |   #######################  |   |   GGGGGAAAGGGGGGGGGGGGGGG  |
+  y  1 |   #######################  |   |   GGGGGAAAGGGGGGGGGGGGGGG  |
+  y  0 |   #######################  |   |   GGGGGGGGGGGGGGGGGGGGGGG  |
+  y -1 |                            |   |                            |
+         +----+----+----+----+----+---+
+              10   5    0    -5   -10   <- z  (front -Z on the RIGHT)  (vertical axis = y)
+
+  TOP    (camera above, looking -Y; image right = +X, up = -Z : the face is at the top of the map)
+  silhouette (1 char = 1 unit)         accent map: G gel  A acid  E eye  C crystal  T tooth  M maw/mouth  K core  ? hidden tile
+  z-13 |                                |   |                                |
+  z-12 |                                |   |                                |
+  z-11 |         #############          |   |         GGGGGAAAAGGGG          |
+  z-10 |     ######################     |   |     GGGGGGGGGGGGAGGGGGGGGG     |
+  z -9 |     ######################     |   |     GGGGGGGGGGMMGGGGGGGGGG     |
+  z -8 |     ######################     |   |     GGGGG?GGGGGGGGGG?GGGGG     |
+  z -7 |     ######################     |   |     GGGGGGGGGGGGGGGGGGGGGG     |
+  z -6 |     ######################     |   |     GGGGGGGGGGGGGGGGGGGGGG     |
+  z -5 |     ######################     |   |     GGGGGGGGGGGGGGGGGGGGGG     |
+  z -4 |     ######################     |   |     GGGGGGGGGGGGGGGGGGGGGG     |
+  z -3 | ##########################     |   | AAAAGGGGGGGGGGGGGGGGGGGGGG     |
+  z -2 | ############################   |   | AAAGGGGGGGGGGGGGGGGGGGGGGGGG   |
+  z -1 | ############################   |   | AAAGGGGGGGGGAAAAAGGGGGGGGGGG   |
+  z  0 |   ##########################   |   |   GGGGGGGGGGAAAAAGGGGGGGGGGG   |
+  z  1 |   ##########################   |   |   GGGGGCCCCGGGGGGGGGGGGGGGGG   |
+  z  2 |   ###########################  |   |   GGGGCCCCCGGGGGGGGGGGGGGGAAA  |
+  z  3 |   ###########################  |   |   GGGGCCCCCGGGGCCGGGGGGGGGAAA  |
+  z  4 |     #########################  |   |     GGCCCCCCGGCCCGGGGGGGGGAAA  |
+  z  5 |     #######################    |   |     GGCCCCCGGGCCCGGGGGGGGGA    |
+  z  6 |     ######################     |   |     GGGGGGGGGGGGGGGGGGGGGG     |
+  z  7 |     ######################     |   |     GGGGGCCCCGGGGGGGGGGGGG     |
+  z  8 |     ######################     |   |     GGGGGCCCCGGGGGGGGGGGGG     |
+  z  9 |     ######################     |   |     GGGGGCCCCCGGGGGCGGGGGG     |
+  z 10 |     ######################     |   |     GGGGGCCCCCGGGGGGGGGGGG     |
+  z 11 |     ######################     |   |     GGGGGCCCCCGGGGGGGGGGGG     |
+  z 12 |          #####                 |   |          CCCCC                 |
+  z 13 |                                |   |                                |
+  z 14 |                                |   |                                |
+         +-+----+----+----+----+----+----++
+           -15  -10  -5   0    5    10   15   <- x  (vertical axis = z)
+
+================ measured geometry ================
+  bones 38  cubes 76  faces drawn 440  atlas tiles declared 84
+  model           x -14.5..14.5  y 0..23.2  z -12.3..12.3   76 cube(s), size 29x23.2x24.6
+  dome            x -9..9  y 2..19  z -9..9   13 cube(s), size 18x17x18
+  skirt           x -11..11  y 0..3  z -11..11   8 cube(s), size 22x3x22
+  eyes            x -5..5  y 8..12  z -9.7..-7.4   6 cube(s), size 10x4x2.3
+  eye lid         x -5..5  y 11.6..12.6  z -9.6..-7.9   2 cube(s), size 10x1x1.7
+  brows           x -5.8..5.4  y 11..14  z -9.4..-7.6   2 cube(s), size 11.1x3x1.8
+  mouth/lip       x -3.5..3.5  y 4.4..7.7  z -9.9..-8.9   1 cube(s), size 7x3.3x1
+  maw+teeth       x -3.5..3.5  y 3.6..8.3  z -9.8..-6.6   11 cube(s), size 7x4.7x3.2
+  core gem        x -3..3  y 2.6..4.6  z -9.8..-8.9   2 cube(s), size 6x2x0.9
+  crystals        x -7.4..4.6  y 5.7..22  z -0.1..12.3   10 cube(s), size 12x16.3x12.4
+  antennae        x -5.1..3.2  y 18.4..23.2  z -2.5..0.5   4 cube(s), size 8.3x4.8x3
+  knob            x -3..3  y 18.5..21  z -3..3   1 cube(s), size 6x2.5x6
+  lobes/arms      x -13..13.5  y 0..12.5  z -12.1..11.5   8 cube(s), size 26.5x12.5x23.6
+  drips           x -12.3..12.3  y 0..6  z -12.3..5.5   6 cube(s), size 24.6x6x17.8
+  beads           x -14.5..14.5  y 0..14.5  z -12.3..5.5   5 cube(s), size 29x14.5x17.8
+  eyes: centroid z -8.5 (front of the model is -Z), eye height 4 vs body height 23.2 = 17% of the total height
+  maw/teeth front-most z -6.6 vs lip front z -9.9
+  atlas families: voidx1 seamx1 gel_sidex28 gel_upx22 gel_downx1 acid_glowx2 acid_upx2 eyex2 eye_glowx1 eye_sparkx1 gel_lidx2 browx1 lipx1 toothx4 mawx1 maw_floorx1 tonguex2 tongue_upx1 corex2 core_upx1 core_glowx1 crystalx3 crystal_topx2 crystal_glowx1
+  wrote docs/preview_front.png, docs/preview_side.png, docs/preview_34.png (256x208 etc., 8 px/unit)
+  wrote docs/preview_atlas.png (512x1032: top = base atlas 4x + tile boundaries, bottom = glow layer composited)
+

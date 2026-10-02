@@ -12,8 +12,8 @@ GeckoLib pipeline: Bedrock geometry + Bedrock 1.8 animations).
 | `acid_gel_slime.bbmodel` | editable Blockbench project — 5.0 format, bedrock, per-face UV, two embedded textures, all 6 clips |
 | `acid_gel_slime.geo.json` | game-ready geometry (`geometry.acid_gel_slime`, format 1.12.0) |
 | `acid_gel_slime.animation.json` | 6 clips (`animation.acid_gel_slime.*`, format 1.8.0) |
-| `acid_gel_slime.png` | 128×128 base atlas (2.7 KB) |
-| `acid_gel_slime_glow.png` | 128×128 emissive atlas, same UVs (0.4 KB) |
+| `acid_gel_slime.png` | 128×128 base atlas (2.6 KB) |
+| `acid_gel_slime_glow.png` | 128×128 emissive atlas, same UVs (0.3 KB) |
 | `docs/preview_front.png` · `preview_side.png` · `preview_34.png` · `preview_atlas.png` | rasterised previews |
 | `docs/VERIFY.md` | independent verification report (7 check groups, measured numbers) |
 | `docs/SPEC.md` · `docs/FORMAT.md` | the design contract, and the verified Blockbench/Bedrock format notes |
@@ -57,7 +57,7 @@ The closed grin only opens in `attack`/`roar` (plus a deliberately slack mouth i
 
 ## 3. Texture
 
-One 128×128 atlas painted by `tools/slime_texture.js`: 73 tiles, every texel opaque, every colour
+One 128×128 atlas painted by `tools/slime_texture.js`: 84 tiles, every texel opaque, every colour
 either a palette entry or `shade()` of one. The 7 dome layers carry `params.light` 0→1 so they
 continue a single 13-step mint→deep-teal ramp; tile tops get a lit rim, bottoms a dark rim, the
 lower gel gets bubbles, the upper gel wet streaks. The free space holds a **swatch board**

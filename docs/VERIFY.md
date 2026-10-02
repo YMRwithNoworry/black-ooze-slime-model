@@ -19,8 +19,8 @@ node tools/preview_slime.js# writes docs/preview_*.png + prints ASCII silhouette
 |---|---|---|
 | G1 | `.bbmodel` structure (meta 5.0 / bedrock / box_uv false, outliner↔groups, unique names/uuids) | PASS 38 groups, 76 elements, 1 outliner root, tree reachable |
 | G2 | textures embedded, `internal:true`, decode 128×128 RGBA, base fully opaque, glow alpha 0 outside emissive families | PASS |
-| G3 | `.geo.json` parity with the bbmodel (origin/size/inflate/rotation + per-face UV convention) | PASS 438/438 faces, 0 uv mismatch |
-| G4 | atlas: rects reproduce a fresh shelf packing, no overlap, every rect inside a painted tile | PASS 73/73 tiles used, 0 stretched faces |
+| G3 | `.geo.json` parity with the bbmodel (origin/size/inflate/rotation + per-face UV convention) | PASS 440/440 faces, 0 uv mismatch |
+| G4 | atlas: rects reproduce a fresh shelf packing, no overlap, every rect inside a painted tile | PASS 84/84 tiles used, 0 stretched faces |
 | G5 | animations: 6 clips, format 1.8.0, names/lengths/loops, bones exist, times in range, tear metric | PASS (4 warnings, below) |
 | G6 | aesthetics (measured): face mirror, maw hidden at rest, nothing below y=0, eyes on −Z, crystals on +Z | PASS 11/11 |
 | G7 | convention self-test against a real Blockbench pair (`refs/infested_zombie` vs its export) | PASS 39/39 faces over 7 cubes |
@@ -28,11 +28,11 @@ node tools/preview_slime.js# writes docs/preview_*.png + prints ASCII silhouette
 ## Measurements
 
 ```
-bones 38   cubes 76   tiles 73   clips 6
+bones 38   cubes 76   tiles 84   clips 6
 bounds x −14.5…14.5  y 0…23.5  z −12.3…11.5     (fits the 2.5³ visible box: 1.45 blocks)
-atlas: 1866 px claimed of 16384 (11.4 %), glow 73 px emissive, 0 px stray
+atlas: 3355 px claimed of 16384 (20.5 %), glow 73 px emissive, 0 px stray
 geo:   38 bones, 76 cubes, 438 faces compared, 0 uv mismatch
-uv:    438 textured faces, 73/73 tiles used, 0 stretched, 100 whitelisted thin/seam stretches
+uv:    440 textured faces, 84/84 tiles used, 0 stretched, 88 whitelisted thin/seam stretches
 aesthetics: 7 mirrored pairs (0 asymmetric), maw frontmost in 40/1280 front samples (= the
             intended fangs, not the cavity), min y = 0 in rest, eye height 17 % of body
 convention self-test: 39/39 faces over 7 cubes reproduce Blockbench's stored-value round trip
