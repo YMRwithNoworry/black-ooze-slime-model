@@ -1,0 +1,9 @@
+# third-party reference models supplied in the chat (not redistributed)
+refs/
+# build scratch
+build/
+out/
+node_modules/
+*.log
+# local agent instructions (not part of the model)
+AGENTS.md

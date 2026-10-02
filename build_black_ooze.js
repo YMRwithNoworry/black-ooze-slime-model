@@ -4,8 +4,9 @@ const path = require('path');
 
 const root = __dirname;
 const outDir = root;
-const W = 128;
-const H = 128;
+const W = 160;
+const H = 160;
+const LOGICAL_UV_SCALE = 0.1;
 const pixels = Buffer.alloc(W * H * 4, 0);
 
 function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
@@ -95,65 +96,111 @@ function makePng() {
   return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(scan, { level: 9 })), chunk('IEND', Buffer.alloc(0))]);
 }
 
-// Texture atlas: body and liquid blocks are kept separate for fast editing in Blockbench.
+// Texture atlas: high-density pixel art with separate body, ooze, eye, and detail swatches.
+const bodyLight = ['#a8bc4d', '#8ea63a', '#6e8c32', '#4d6d2b', '#2f4e27', '#c4d66c'];
+const bodyDark = ['#16221c', '#202c1e', '#273923', '#354c27'];
 for (let y = 0; y < 48; y++) {
   const t = y / 47;
-  const r = Math.round(103 * (1 - t) + 39 * t);
-  const g = Math.round(145 * (1 - t) + 67 * t);
-  const b = Math.round(48 * (1 - t) + 25 * t);
+  const r = Math.round(119 * (1 - t) + 40 * t);
+  const g = Math.round(155 * (1 - t) + 66 * t);
+  const b = Math.round(51 * (1 - t) + 27 * t);
   rect(0, y, 64, 1, [r, g, b, 255]);
 }
-for (let y = 0; y < 48; y++) {
-  const t = y / 47;
-  rect(64, y, 64, 1, [Math.round(18 - 7 * t), Math.round(20 - 9 * t), Math.round(27 - 4 * t), 255]);
-}
-// Pixel noise keeps the exposed slime from reading as a flat color.
+// Layered square clusters create the hand-painted, tile-dense look of the reference.
 let seed = 41873;
-for (let i = 0; i < 180; i++) {
+for (let i = 0; i < 260; i++) {
   seed = (seed * 1664525 + 1013904223) >>> 0;
-  const x = seed % 64;
+  const x = seed % 60;
   seed = (seed * 1664525 + 1013904223) >>> 0;
-  const y = seed % 48;
-  const shades = ['#86a83a', '#557d27', '#29491f', '#b5c94b'];
-  blend(x, y, color(shades[i % shades.length]), i % 3 === 0 ? 0.7 : 0.45);
+  const y = seed % 44;
+  seed = (seed * 1664525 + 1013904223) >>> 0;
+  const w = 2 + (seed % 4);
+  seed = (seed * 1664525 + 1013904223) >>> 0;
+  const h = 1 + (seed % 4);
+  const palette = i % 7 === 0 ? bodyDark : bodyLight;
+  rect(x, y, w, h, palette[seed % palette.length]);
+  if (i % 5 === 0) line(x, y, x + w - 1, y, '#c8dc73');
 }
-// Black ooze patches and vertical drips on the body atlas.
-polygon([[5, 0], [20, 0], [19, 8], [16, 10], [15, 22], [11, 23], [10, 8], [6, 7]], '#0d1017');
-polygon([[30, 0], [47, 0], [47, 12], [44, 13], [43, 28], [38, 30], [37, 10], [31, 8]], '#12131a');
-polygon([[51, 0], [63, 0], [63, 18], [59, 18], [58, 36], [54, 37], [53, 10]], '#080b10');
-rect(0, 35, 64, 13, '#1b241e');
-polygon([[2, 35], [14, 35], [14, 41], [11, 42], [10, 48], [4, 48]], '#080b10');
-polygon([[22, 32], [35, 31], [34, 40], [31, 41], [30, 48], [23, 48]], '#0b0d12');
+// Green gel edges remain visible beside the black liquid sheets.
+polygon([[4, 0], [20, 0], [19, 8], [16, 10], [15, 23], [11, 24], [10, 8], [6, 7]], '#090c11');
+polygon([[30, 0], [47, 0], [47, 12], [44, 14], [43, 29], [38, 31], [37, 10], [31, 8]], '#11131a');
+polygon([[51, 0], [63, 0], [63, 19], [59, 20], [58, 37], [54, 38], [53, 10]], '#080a10');
+line(21, 1, 20, 8, '#56613c'); line(48, 2, 47, 11, '#4c5c3b'); line(60, 4, 59, 18, '#5d6941');
+rect(0, 35, 64, 13, '#1b2820');
+polygon([[2, 35], [14, 35], [14, 41], [11, 43], [10, 48], [4, 48]], '#080b10');
+polygon([[22, 32], [35, 31], [34, 40], [31, 42], [30, 48], [23, 48]], '#0b0d12');
 polygon([[44, 33], [59, 33], [59, 44], [56, 45], [55, 48], [47, 48]], '#090c12');
-// Liquid atlas: violet-black body, green reflected edge, and wet specular marks.
-for (let y = 0; y < 48; y += 4) {
-  line(64, y, 127, y, y % 8 === 0 ? '#252331' : '#11131a');
+line(5, 36, 12, 36, '#4b5e34'); line(25, 33, 33, 33, '#59653a'); line(48, 34, 56, 34, '#5a6840');
+// Liquid atlas: charcoal, bruised violet, brown-black and green reflected edge pixels.
+for (let y = 0; y < 52; y++) {
+  const shade = y % 8 === 0 ? '#332d38' : y % 4 === 0 ? '#211f29' : '#11131a';
+  rect(64, y, 64, 1, shade);
+}
+const liquidPatches = ['#05070b', '#0b0c12', '#171622', '#26232e', '#382d35', '#4b3a3a', '#566044', '#73604c'];
+for (let i = 0; i < 230; i++) {
+  seed = (seed * 1664525 + 1013904223) >>> 0;
+  const x = 65 + (seed % 61);
+  seed = (seed * 1664525 + 1013904223) >>> 0;
+  const y = seed % 49;
+  seed = (seed * 1664525 + 1013904223) >>> 0;
+  const w = 1 + (seed % 5);
+  seed = (seed * 1664525 + 1013904223) >>> 0;
+  const h = 1 + (seed % 3);
+  rect(x, y, w, h, liquidPatches[seed % liquidPatches.length]);
+  if (i % 9 === 0) line(x, y, x + Math.max(1, w - 2), y, '#88725e');
 }
 polygon([[67, 1], [83, 1], [82, 14], [78, 17], [77, 31], [72, 32], [72, 13], [68, 10]], '#05070b');
-polygon([[92, 0], [109, 0], [108, 20], [104, 21], [103, 40], [98, 42], [97, 16], [93, 14]], '#080910');
-polygon([[116, 2], [126, 2], [126, 29], [122, 30], [121, 47], [116, 47]], '#06070c');
-line(70, 4, 77, 3, '#566b49'); line(96, 5, 103, 4, '#5d6551'); line(119, 8, 124, 7, '#7f8059');
-line(75, 21, 77, 22, '#3b4f39'); line(102, 24, 105, 23, '#4c5a40'); line(119, 37, 121, 35, '#394932');
-for (let i = 0; i < 36; i++) {
+polygon([[92, 0], [109, 0], [108, 20], [104, 22], [103, 40], [98, 42], [97, 16], [93, 14]], '#080910');
+polygon([[116, 2], [126, 2], [126, 29], [122, 30], [121, 49], [116, 49]], '#06070c');
+line(69, 3, 78, 2, '#77705d'); line(70, 4, 77, 5, '#3f4b38'); line(96, 4, 104, 3, '#8a735d');
+line(97, 5, 102, 7, '#443e43'); line(119, 7, 124, 6, '#978060'); line(120, 8, 123, 10, '#4e4b43');
+line(75, 21, 78, 20, '#526046'); line(102, 24, 106, 23, '#63654a'); line(119, 38, 122, 36, '#596347');
+// Face region: layered sockets, wet lime/cyan eyes, and tiny pupil highlights.
+rect(0, 64, 32, 16, '#07090d');
+rect(1, 65, 14, 12, '#171721'); rect(17, 65, 14, 12, '#171721');
+rect(2, 66, 12, 10, '#aabd4e'); rect(18, 66, 12, 10, '#aabd4e');
+rect(3, 67, 10, 8, '#3c806d'); rect(19, 67, 10, 8, '#3c806d');
+rect(5, 68, 7, 6, '#72d9be'); rect(20, 68, 7, 6, '#72d9be');
+rect(5, 68, 3, 3, '#e8ff9a'); rect(20, 68, 3, 3, '#e8ff9a');
+rect(10, 72, 2, 2, '#11251f'); rect(25, 72, 2, 2, '#11251f');
+line(2, 76, 13, 76, '#56633b'); line(18, 76, 29, 76, '#56633b');
+// Detail region: crack lines and extra glossy strips for the side/tip cubes.
+rect(32, 64, 64, 32, '#080a0f');
+for (let i = 0; i < 85; i++) {
   seed = (seed * 1664525 + 1013904223) >>> 0;
-  const x = 64 + (seed % 64);
+  const x = 34 + (seed % 60);
   seed = (seed * 1664525 + 1013904223) >>> 0;
-  const y = seed % 48;
-  blend(x, y, color(i % 2 ? '#343344' : '#0a0b12'), 0.55);
+  const y = 65 + (seed % 29);
+  rect(x, y, 1 + (seed % 4), 1 + (seed % 3), i % 4 ? '#22222e' : '#5b5048');
 }
-// Face region: black sockets with acid-green/cyan eyes.
-rect(0, 64, 32, 16, '#080a0e');
-rect(2, 66, 12, 10, '#c5d85c'); rect(18, 66, 12, 10, '#c5d85c');
-rect(4, 68, 8, 6, '#71d5bd'); rect(20, 68, 8, 6, '#71d5bd');
-rect(5, 68, 3, 3, '#e9ff9a'); rect(21, 68, 3, 3, '#e9ff9a');
-rect(10, 72, 2, 2, '#14251d'); rect(26, 72, 2, 2, '#14251d');
-// Detail region for optional extra pieces.
-rect(32, 64, 64, 32, '#0b0d12');
-polygon([[35, 65], [44, 65], [43, 79], [40, 81], [39, 94], [35, 94]], '#20232d');
-polygon([[52, 66], [62, 66], [61, 82], [58, 84], [57, 95], [52, 95]], '#161923');
-polygon([[69, 65], [80, 65], [79, 76], [75, 78], [74, 94], [69, 94]], '#27283a');
-line(36, 66, 42, 67, '#667a54'); line(53, 68, 60, 69, '#586a4a'); line(70, 67, 77, 68, '#79815b');
-rect(84, 66, 9, 9, '#71d5bd'); rect(86, 68, 5, 5, '#d7f47a');
+polygon([[35, 65], [44, 65], [43, 79], [40, 81], [39, 94], [35, 94]], '#1e202a');
+polygon([[52, 66], [62, 66], [61, 82], [58, 84], [57, 95], [52, 95]], '#151720');
+polygon([[69, 65], [80, 65], [79, 76], [75, 78], [74, 94], [69, 94]], '#292a3a');
+line(36, 66, 42, 67, '#869064'); line(53, 68, 60, 69, '#7d765a'); line(70, 67, 77, 68, '#a08a68');
+line(40, 81, 38, 91, '#4e5360'); line(57, 83, 55, 93, '#51484d');
+rect(84, 66, 9, 9, '#4aa88e'); rect(86, 68, 5, 5, '#d7f47a'); rect(87, 69, 2, 2, '#f4ffaf');
+// Dense lower swatches keep the full 160px atlas useful for future Blockbench edits.
+const swatchPalette = ['#0a0c11', '#15151e', '#24212b', '#382c33', '#4b3634', '#60453b', '#6f6249', '#4b603a', '#73834b', '#9b8a5c'];
+for (let y = 96; y < 160; y += 8) {
+  for (let x = 0; x < 160; x += 8) {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    const fill = swatchPalette[seed % swatchPalette.length];
+    rect(x, y, 8, 8, fill);
+    line(x, y, x + 7, y, '#080a0e');
+    line(x, y, x, y + 7, '#080a0e');
+    if ((seed & 3) !== 0) rect(x + 2, y + 2, 3, 2, seed % 3 ? '#332d35' : '#8e785a');
+    if ((seed & 7) === 0) rect(x + 5, y + 5, 2, 2, '#b1a267');
+  }
+}
+for (let y = 100; y < 156; y += 12) {
+  line(2, y, 28, y - 3, '#83965a');
+  line(36, y + 5, 62, y + 2, '#76584b');
+  line(74, y - 2, 102, y + 1, '#514b4d');
+  line(116, y + 3, 150, y, '#8c7357');
+}
+// A few unused swatches make the atlas easier to extend in Blockbench.
+rect(100, 64, 12, 12, '#273b2d'); rect(102, 66, 8, 8, '#668f3d');
+rect(116, 64, 10, 12, '#2d1d25'); rect(118, 66, 6, 8, '#70433d');
 
 const png = makePng();
 fs.writeFileSync(path.join(outDir, 'black_ooze_slime.png'), png);
@@ -165,13 +212,14 @@ function uuid() {
   return `9b3f7a12-2a5d-4c0e-8${n.slice(0, 3)}-${n.slice(3).padEnd(12, '0')}`;
 }
 function uvFaces(u, v, w, h, d) {
+  const s = value => Number((value * LOGICAL_UV_SCALE).toFixed(3));
   return {
-    north: { uv: [u, v, u + w, v + h], texture: 0 },
-    east: { uv: [u + w, v, u + w + d, v + h], texture: 0 },
-    south: { uv: [u + w + d, v, u + 2 * w + d, v + h], texture: 0 },
-    west: { uv: [u + 2 * w + d, v, u + 2 * w + 2 * d, v + h], texture: 0 },
-    up: { uv: [u + w, v + h, u, v + h + d], texture: 0 },
-    down: { uv: [u + w, v + h + d, u, v + h + 2 * d], texture: 0 }
+    north: { uv: [s(u), s(v), s(u + w), s(v + h)], texture: 0 },
+    east: { uv: [s(u + w), s(v), s(u + w + d), s(v + h)], texture: 0 },
+    south: { uv: [s(u + w + d), s(v), s(u + 2 * w + d), s(v + h)], texture: 0 },
+    west: { uv: [s(u + 2 * w + d), s(v), s(u + 2 * w + 2 * d), s(v + h)], texture: 0 },
+    up: { uv: [s(u + w), s(v + h), s(u), s(v + h + d)], texture: 0 },
+    down: { uv: [s(u + w), s(v + h + d), s(u), s(v + h + 2 * d)], texture: 0 }
   };
 }
 function cube(name, from, to, uv, origin, rotation = [0, 0, 0], colorIndex = 0) {
@@ -210,24 +258,24 @@ addCube(dripGroup, cube('drip_front_left', [-7, 7, -8], [-5, 14, -7], [64, 0], [
 addCube(dripGroup, cube('drip_front_right', [5, 6, -8], [7, 13, -7], [64, 0], [6, 11, -7.5], [0, 0, 0], 7));
 const rightArm = group('right_ooze_tendril', [8, 13, 0], [0, 0, -12], 5, dripGroup);
 addCube(rightArm, cube('right_tendril_upper', [7, 10, -3], [12, 15, 3], [64, 0], [8, 13, 0], [0, 0, -12], 8));
-addCube(rightArm, cube('right_tendril_mid', [10, 4, -2], [14, 11, 2], [64, 20], [12, 10, 0], [0, 0, -18], 8));
+addCube(rightArm, cube('right_tendril_mid', [10, 4, -2], [14, 11, 2], [32, 96], [12, 10, 0], [0, 0, -18], 8));
 addCube(rightArm, cube('right_tendril_tip', [12, 0, -1.5], [15, 6, 1.5], [64, 20], [14, 5, 0], [0, 0, -12], 8));
 const leftArm = group('left_ooze_tendril', [-8, 13, 0], [0, 0, 12], 6, dripGroup);
 addCube(leftArm, cube('left_tendril_upper', [-12, 10, -3], [-7, 15, 3], [64, 0], [-8, 13, 0], [0, 0, 12], 8));
-addCube(leftArm, cube('left_tendril_mid', [-14, 4, -2], [-10, 11, 2], [64, 20], [-12, 10, 0], [0, 0, 18], 8));
+addCube(leftArm, cube('left_tendril_mid', [-14, 4, -2], [-10, 11, 2], [32, 96], [-12, 10, 0], [0, 0, 18], 8));
 addCube(leftArm, cube('left_tendril_tip', [-15, 0, -1.5], [-12, 6, 1.5], [64, 20], [-14, 5, 0], [0, 0, 12], 8));
 const rearGroup = group('rear_drag', [0, 8, 7], [0, 0, 0], 7, dripGroup);
-addCube(rearGroup, cube('rear_drip_upper', [-3, 8, 7], [3, 14, 10], [64, 0], [0, 13, 8], [10, 0, 0], 8));
-addCube(rearGroup, cube('rear_drip_tip', [-2, 1, 8], [2, 9, 11], [64, 20], [0, 8, 9], [8, 0, 0], 8));
+addCube(rearGroup, cube('rear_drip_upper', [-3, 8, 7], [3, 14, 10], [64, 96], [0, 13, 8], [10, 0, 0], 8));
+addCube(rearGroup, cube('rear_drip_tip', [-2, 1, 8], [2, 9, 11], [64, 112], [0, 8, 9], [8, 0, 0], 8));
 const topGroup = group('crown_ooze', [0, 22, 0], [0, 0, 0], 8, rootGroup);
-addCube(topGroup, cube('crown_blob', [-3, 21, -3], [3, 26, 3], [64, 0], [0, 22, 0], [0, 0, 0], 9));
-addCube(topGroup, cube('crown_drip', [-1.5, 23, -4], [1.5, 29, -2.5], [64, 20], [0, 24, -3], [0, 0, 0], 9));
+addCube(topGroup, cube('crown_blob', [-3, 21, -3], [3, 26, 3], [96, 96], [0, 22, 0], [0, 0, 0], 9));
+addCube(topGroup, cube('crown_drip', [-1.5, 23, -4], [1.5, 29, -2.5], [96, 112], [0, 24, -3], [0, 0, 0], 9));
 
 const outliner = [{ uuid: rootGroup, isOpen: true, children: groupChildren.get(rootGroup) }];
 const textureBase64 = png.toString('base64');
 const texture = {
   name: 'black_ooze_slime.png', relative_path: 'black_ooze_slime.png', folder: '', namespace: '', id: '0', group: '', scope: 0,
-  width: W, height: H, uv_width: W, uv_height: H, particle: false, use_as_default: true, layers_enabled: false,
+  width: W, height: H, uv_width: 16, uv_height: 16, particle: false, use_as_default: true, layers_enabled: false,
   sync_to_project: '', file_format: 'png', render_mode: 'default', render_sides: 'auto', wrap_mode: 'limited', pbr_channel: 'color',
   fps: 1, frame_time: 1, frame_order_type: 'loop', frame_order: '', frame_interpolate: false, visible: true, internal: true,
   saved: true, uuid: uuid(), source: `data:image/png;base64,${textureBase64}`
@@ -236,7 +284,7 @@ const bbmodel = {
   meta: { format_version: '5.0', model_format: 'bedrock', box_uv: false },
   name: 'black_ooze_slime.geo', model_identifier: 'geometry.black_ooze_slime', visible_box: [5, 4, 2],
   variable_placeholders: '', multi_file_ruleset: '', variable_placeholder_buttons: [], bedrock_animation_mode: 'entity', timeline_setups: [], unhandled_root_fields: {},
-  resolution: { width: W, height: H }, elements, groups, outliner, textures: [texture]
+  resolution: { width: 16, height: 16 }, elements, groups, outliner, textures: [texture]
 };
 fs.writeFileSync(path.join(outDir, 'black_ooze_slime.bbmodel'), JSON.stringify(bbmodel, null, 2));
 
@@ -265,7 +313,7 @@ const bones = groups.map(g => bone(g.uuid, parentMap.get(g.uuid)));
 const geo = {
   format_version: '1.12.0',
   'minecraft:geometry': [{
-    description: { identifier: 'geometry.black_ooze_slime', texture_width: W, texture_height: H, visible_bounds_width: 5, visible_bounds_height: 4.5, visible_bounds_offset: [0, 2.25, 0] },
+    description: { identifier: 'geometry.black_ooze_slime', texture_width: 16, texture_height: 16, visible_bounds_width: 5, visible_bounds_height: 4.5, visible_bounds_offset: [0, 2.25, 0] },
     bones
   }]
 };

@@ -1,0 +1,824 @@
+{
+ "generated": "2026-10-02T14:47:02.892Z",
+ "counts": {
+  "critical": 0,
+  "warning": 4,
+  "info": 9
+ },
+ "groups": [
+  {
+   "id": "G1",
+   "title": "bbmodel structure",
+   "pass": false,
+   "checks": [
+    {
+     "name": "parses",
+     "ok": true,
+     "detail": "acid_gel_slime.bbmodel (867.5 KiB)"
+    },
+    {
+     "name": "meta.format_version = 5.0",
+     "ok": true,
+     "detail": "5.0"
+    },
+    {
+     "name": "meta.model_format = bedrock",
+     "ok": true,
+     "detail": "bedrock"
+    },
+    {
+     "name": "meta.box_uv = false",
+     "ok": true,
+     "detail": "false"
+    },
+    {
+     "name": "elements/groups/outliner present",
+     "ok": true,
+     "detail": "elements 76, groups 38, outliner roots 1"
+    },
+    {
+     "name": "unique element uuid/name",
+     "ok": true,
+     "detail": "ok"
+    },
+    {
+     "name": "unique group uuid/name",
+     "ok": true,
+     "detail": "ok"
+    },
+    {
+     "name": "outliner lists every group",
+     "ok": true,
+     "detail": "38 group nodes"
+    },
+    {
+     "name": "group records carry a complete tree",
+     "ok": false,
+     "detail": "38 missing (harmless: Blockbench ignores groups[].children)"
+    },
+    {
+     "name": "every element is attached to a group in the outliner",
+     "ok": true,
+     "detail": "ok"
+    },
+    {
+     "name": "every element is attached to a group in the group records",
+     "ok": false,
+     "detail": "76 element(s) orphaned (only in groups[].children)"
+    },
+    {
+     "name": "outliner and group records agree",
+     "ok": true,
+     "detail": "ok"
+    },
+    {
+     "name": "all elements are cubes",
+     "ok": true,
+     "detail": "ok"
+    },
+    {
+     "name": "no element without a texture reference",
+     "ok": true,
+     "detail": "ok"
+    },
+    {
+     "name": "no negative / inverted cube sizes",
+     "ok": true,
+     "detail": "ok"
+    },
+    {
+     "name": "no zero-thickness cube",
+     "ok": true,
+     "detail": "ok"
+    },
+    {
+     "name": "all cube sizes integral (SPEC 2)",
+     "ok": false,
+     "detail": "26 cube(s): apron_front,core_gem,core_glow,knob,eye_l_sclera,eye_l_iris"
+    },
+    {
+     "name": "bbmodel animations embedded",
+     "ok": true,
+     "detail": "6 animation(s)"
+    }
+   ]
+  },
+  {
+   "id": "G2",
+   "title": "embedded textures",
+   "pass": false,
+   "checks": [
+    {
+     "name": "exactly 2 embedded textures",
+     "ok": true,
+     "detail": "2: acid_gel_slime.png, acid_gel_slime_glow.png"
+    },
+    {
+     "name": "both textures internal:true",
+     "ok": true,
+     "detail": "ok"
+    },
+    {
+     "name": "declared 128x128",
+     "ok": true,
+     "detail": "ok"
+    },
+    {
+     "name": "textures embedded as data:image/png;base64",
+     "ok": true,
+     "detail": "2/2"
+    },
+    {
+     "name": "texture[0] acid_gel_slime.png decodes to 128x128 RGBA",
+     "ok": true,
+     "detail": "128x128"
+    },
+    {
+     "name": "texture[1] acid_gel_slime_glow.png decodes to 128x128 RGBA",
+     "ok": true,
+     "detail": "128x128"
+    },
+    {
+     "name": "standalone PNGs identical to embedded",
+     "ok": true,
+     "detail": "sha256 eac2ee085132 / abaf6c96a4bf"
+    },
+    {
+     "name": "base atlas has no transparent texel",
+     "ok": true,
+     "detail": "all 16384 opaque"
+    },
+    {
+     "name": "atlas background outside tiles is one flat colour",
+     "ok": false,
+     "detail": "95,199,155 dominant 10222/14518 px, 48 distinct colours outside the tiles"
+    },
+    {
+     "name": "every declared tile is painted on the base atlas",
+     "ok": true,
+     "detail": "73 tiles painted"
+    },
+    {
+     "name": "no unpainted pixel inside claimed tiles (accept. crit. 5)",
+     "ok": true,
+     "detail": "86 background-coloured px inside tiles of 1866"
+    },
+    {
+     "name": "glow atlas transparent outside glow tiles",
+     "ok": true,
+     "detail": "ok"
+    },
+    {
+     "name": "glow atlas painted inside glow tiles",
+     "ok": true,
+     "detail": "73/73 px opaque"
+    },
+    {
+     "name": "every declared glow tile is painted on the glow atlas",
+     "ok": true,
+     "detail": "ok"
+    },
+    {
+     "name": "unused pixels outside claimed tiles are not painted on the base atlas",
+     "ok": true,
+     "detail": "claimed-region background px 86"
+    },
+    {
+     "name": "base atlas uses only PALETTE hues (SPEC 1)",
+     "ok": true,
+     "detail": "17 distinct non-palette hexes (gradients/shading)"
+    }
+   ]
+  },
+  {
+   "id": "G3",
+   "title": "geo vs bbmodel",
+   "pass": true,
+   "checks": [
+    {
+     "name": "format_version = 1.12.0",
+     "ok": true,
+     "detail": "1.12.0"
+    },
+    {
+     "name": "minecraft:geometry[0] present",
+     "ok": true,
+     "detail": "ok"
+    },
+    {
+     "name": "identifier = geometry.acid_gel_slime",
+     "ok": true,
+     "detail": "geometry.acid_gel_slime"
+    },
+    {
+     "name": "texture_width/height = 128",
+     "ok": true,
+     "detail": "128x128"
+    },
+    {
+     "name": "visible_bounds present",
+     "ok": true,
+     "detail": "2.5 x 2.5 @ [0,1,0]"
+    },
+    {
+     "name": "bones in parent-first order",
+     "ok": true,
+     "detail": "38 bones"
+    },
+    {
+     "name": "bone set == bbmodel group set",
+     "ok": true,
+     "detail": "38 bones"
+    },
+    {
+     "name": "bone pivots match group origins",
+     "ok": true,
+     "detail": "ok"
+    },
+    {
+     "name": "bone rotations match group rotations",
+     "ok": true,
+     "detail": "ok"
+    },
+    {
+     "name": "cube counts per bone match",
+     "ok": true,
+     "detail": "76 cubes compared"
+    },
+    {
+     "name": "cube origin/size/inflate/rotation match",
+     "ok": true,
+     "detail": "ok"
+    },
+    {
+     "name": "per-face uv matches the verified convention",
+     "ok": true,
+     "detail": "438 faces"
+    },
+    {
+     "name": "no face present in geo but absent in bbmodel",
+     "ok": true,
+     "detail": "ok"
+    }
+   ]
+  },
+  {
+   "id": "G4",
+   "title": "atlas / uv coverage",
+   "pass": true,
+   "checks": [
+    {
+     "name": "build/report.json declares the tile list",
+     "ok": true,
+     "detail": "73 tiles"
+    },
+    {
+     "name": "declared tile rects reproduce the shelf packer",
+     "ok": true,
+     "detail": "73 tiles packed"
+    },
+    {
+     "name": "tiles do not overlap",
+     "ok": true,
+     "detail": "ok"
+    },
+    {
+     "name": "all uv rects inside 0..128",
+     "ok": true,
+     "detail": "438 faces checked"
+    },
+    {
+     "name": "every face rect is covered by a declared (painted) tile",
+     "ok": true,
+     "detail": "ok"
+    },
+    {
+     "name": "no zero-size uv rect on a textured face",
+     "ok": true,
+     "detail": "ok"
+    },
+    {
+     "name": "no painted tile is left unused by every face",
+     "ok": true,
+     "detail": "73/73 tiles used"
+    },
+    {
+     "name": "uv size == face size (>0.5 tolerance, whitelisted seam/void/thin)",
+     "ok": true,
+     "detail": "ok"
+    },
+    {
+     "name": "bbmodel side-face uv stored min-first",
+     "ok": true,
+     "detail": "ok"
+    },
+    {
+     "name": "thin-detail / seam stretches only on whitelisted families",
+     "ok": true,
+     "detail": "100 whitelisted stretch(es)"
+    }
+   ]
+  },
+  {
+   "id": "G5",
+   "title": "animations",
+   "pass": false,
+   "checks": [
+    {
+     "name": "format_version = 1.8.0",
+     "ok": true,
+     "detail": "1.8.0"
+    },
+    {
+     "name": "exactly the 6 expected clips",
+     "ok": true,
+     "detail": "6 clips"
+    },
+    {
+     "name": "clip idle: loop flag",
+     "ok": true,
+     "detail": "loop=true expected true"
+    },
+    {
+     "name": "clip idle: keyframe times inside animation_length",
+     "ok": true,
+     "detail": "len 4, 645 keys"
+    },
+    {
+     "name": "clip idle: animated bones exist in the geo",
+     "ok": true,
+     "detail": "28 bones"
+    },
+    {
+     "name": "clip idle: last keyframe returns to rest",
+     "ok": false,
+     "detail": "max channel deviation 11.273"
+    },
+    {
+     "name": "clip idle: mesh stays attached (worst relative cube displacement < 4u)",
+     "ok": true,
+     "detail": "worst 0.79u on lobe_r @t=1"
+    },
+    {
+     "name": "clip move: loop flag",
+     "ok": true,
+     "detail": "loop=true expected true"
+    },
+    {
+     "name": "clip move: keyframe times inside animation_length",
+     "ok": true,
+     "detail": "len 1, 179 keys"
+    },
+    {
+     "name": "clip move: animated bones exist in the geo",
+     "ok": true,
+     "detail": "27 bones"
+    },
+    {
+     "name": "clip move: last keyframe returns to rest",
+     "ok": false,
+     "detail": "max channel deviation 1.2"
+    },
+    {
+     "name": "clip move: mesh stays attached (worst relative cube displacement < 4u)",
+     "ok": true,
+     "detail": "worst 2.43u on skirt @t=0.5"
+    },
+    {
+     "name": "clip attack: loop flag",
+     "ok": true,
+     "detail": "loop=false expected false"
+    },
+    {
+     "name": "clip attack: keyframe times inside animation_length",
+     "ok": true,
+     "detail": "len 1.25, 236 keys"
+    },
+    {
+     "name": "clip attack: animated bones exist in the geo",
+     "ok": true,
+     "detail": "36 bones"
+    },
+    {
+     "name": "clip attack: last keyframe returns to rest",
+     "ok": true,
+     "detail": "max channel deviation 0"
+    },
+    {
+     "name": "clip attack: mesh stays attached (worst relative cube displacement < 4u)",
+     "ok": true,
+     "detail": "worst 3.3u on lobe_r @t=0.52"
+    },
+    {
+     "name": "clip roar: loop flag",
+     "ok": true,
+     "detail": "loop=false expected false"
+    },
+    {
+     "name": "clip roar: keyframe times inside animation_length",
+     "ok": true,
+     "detail": "len 1.6, 245 keys"
+    },
+    {
+     "name": "clip roar: animated bones exist in the geo",
+     "ok": true,
+     "detail": "31 bones"
+    },
+    {
+     "name": "clip roar: last keyframe returns to rest",
+     "ok": true,
+     "detail": "max channel deviation 0"
+    },
+    {
+     "name": "clip roar: mesh stays attached (worst relative cube displacement < 4u)",
+     "ok": true,
+     "detail": "worst 2.38u on lobe_r @t=0.93"
+    },
+    {
+     "name": "clip spawn: loop flag",
+     "ok": true,
+     "detail": "loop=false expected false"
+    },
+    {
+     "name": "clip spawn: keyframe times inside animation_length",
+     "ok": true,
+     "detail": "len 1.4, 177 keys"
+    },
+    {
+     "name": "clip spawn: animated bones exist in the geo",
+     "ok": true,
+     "detail": "28 bones"
+    },
+    {
+     "name": "clip spawn: last keyframe returns to rest",
+     "ok": true,
+     "detail": "max channel deviation 0"
+    },
+    {
+     "name": "clip spawn: mesh stays attached (worst relative cube displacement < 4u)",
+     "ok": false,
+     "detail": "worst 4.2u on skirt @t=0"
+    },
+    {
+     "name": "clip death: loop flag",
+     "ok": true,
+     "detail": "loop=false expected false"
+    },
+    {
+     "name": "clip death: keyframe times inside animation_length",
+     "ok": true,
+     "detail": "len 1.2, 159 keys"
+    },
+    {
+     "name": "clip death: animated bones exist in the geo",
+     "ok": true,
+     "detail": "29 bones"
+    },
+    {
+     "name": "clip death: mesh stays attached (worst relative cube displacement < 4u)",
+     "ok": false,
+     "detail": "worst 4.18u on jelly_top @t=1.2"
+    }
+   ]
+  },
+  {
+   "id": "G6",
+   "title": "aesthetics (measured)",
+   "pass": true,
+   "checks": [
+    {
+     "name": "face l/r pairs mirror about x=0 (eyes/brows/lip/mouth, SPEC 6)",
+     "ok": true,
+     "detail": "antenna_l/antenna_r bulb_l/bulb_r eye_l/eye_r brow_l/brow_r mirror exactly"
+    },
+    {
+     "name": "non-face l/r pairs (drips/lobes/beads/antennae) - deliberate asymmetry?",
+     "ok": true,
+     "detail": "drip_l/drip_r: unmatched drip_l_stem,drip_l_bead extra on right drip_r_stem,drip_r_bead | lobe_l/lobe_r: unmatched lobe_l1 extra on right lobe_r1 | bead_l/bead_r: unmatched bead_l extra on right bead_r  <- intended per SPEC 1 unless the lead says otherwise"
+    },
+    {
+     "name": "mirrored pairs reuse the same atlas tile per corresponding face",
+     "ok": true,
+     "detail": "ok"
+    },
+    {
+     "name": "maw cavity hidden from the front at rest (SPEC 2)",
+     "ok": true,
+     "detail": "1280 front-ray samples, the cavity is never frontmost"
+    },
+    {
+     "name": "teeth only visible outside the lip y band (fang tips, per the frozen anchors)",
+     "ok": true,
+     "detail": "40 visible tooth sample(s) of 1280; 40 above/below the lip band [4.4,7.7], 0 inside it; hit z -9.8..-9.8 (lip front z -9.9)"
+    },
+    {
+     "name": "nothing below y=0 at rest",
+     "ok": true,
+     "detail": "lowest point y=0 (skirt_f)"
+    },
+    {
+     "name": "model fits the declared visible box",
+     "ok": true,
+     "detail": "half-extent 1.45 blocks (visible_bounds_width 2.5)"
+    },
+    {
+     "name": "eyes are on the -Z (front) side and face -Z",
+     "ok": true,
+     "detail": "eye centroid z=-8.5, 4/4 eye cubes have a north face"
+    },
+    {
+     "name": "cute proportion: eye height ~1/5 of the body height (SPEC 1)",
+     "ok": true,
+     "detail": "17% (4 of 23.2)"
+    },
+    {
+     "name": "danger on the back: crystals sit at +Z",
+     "ok": true,
+     "detail": "crystal centroid z=4.9"
+    },
+    {
+     "name": "glowing core in the belly/front",
+     "ok": true,
+     "detail": "core centroid y=3.6 z=-9.4"
+    }
+   ]
+  },
+  {
+   "id": "G7",
+   "title": "convention self-test (references)",
+   "pass": true,
+   "checks": [
+    {
+     "name": "bbmodel->geo uv round-trip reproduces real Blockbench output (7 cubes)",
+     "ok": true,
+     "detail": "39/39 faces (north 7/7, east 7/7, south 6/6, west 7/7, up 6/6, down 6/6)"
+    }
+   ]
+  }
+ ],
+ "findings": [
+  {
+   "sev": "WARNING",
+   "group": "G5",
+   "title": "clip idle does not return to the rest pose at its last keyframe (SPEC 5)",
+   "where": "tools/slime_animations.js",
+   "fix": "add a final key equal to the rest value",
+   "detail": "max deviation 11.273",
+   "id": "W-01"
+  },
+  {
+   "sev": "WARNING",
+   "group": "G5",
+   "title": "clip move does not return to the rest pose at its last keyframe (SPEC 5)",
+   "where": "tools/slime_animations.js",
+   "fix": "add a final key equal to the rest value",
+   "detail": "max deviation 1.2",
+   "id": "W-02"
+  },
+  {
+   "sev": "WARNING",
+   "group": "G5",
+   "title": "clip spawn: skirt moves 4.2u away from its parent (>4u)",
+   "where": "tools/slime_animations.js",
+   "fix": "check the pivot of that bone / ease the motion",
+   "detail": "t=0 of 1.4",
+   "id": "W-03"
+  },
+  {
+   "sev": "WARNING",
+   "group": "G5",
+   "title": "clip death: jelly_top moves 4.18u away from its parent (>4u)",
+   "where": "tools/slime_animations.js",
+   "fix": "check the pivot of that bone / ease the motion",
+   "detail": "t=1.2 of 1.2",
+   "id": "W-04"
+  },
+  {
+   "sev": "INFO",
+   "group": "G1",
+   "title": "26 cube(s) with non-integer size",
+   "where": "docs/SPEC.md:2 (anchors themselves use e.g. eye depth 2.1)",
+   "fix": "none required: the frozen anchors use fractional sizes too",
+   "detail": "apron_front,core_gem,core_glow,knob,eye_l_sclera,eye_l_iris,eye_l_spark,eye_l_lid",
+   "id": "I-01"
+  },
+  {
+   "sev": "INFO",
+   "group": "G2",
+   "title": "the atlas has painted pixels outside every declared tile (harmless: nothing samples them)",
+   "where": "tools/slime_texture.js",
+   "fix": "optional: paint only inside the allocated tiles",
+   "detail": "95,199,155 x10222 | 14,42,36 x1013 | 184,247,221 x490 | 11,36,31 x336",
+   "id": "I-02"
+  },
+  {
+   "sev": "INFO",
+   "group": "G5",
+   "title": "clip idle sinks the mesh to y=-0.37 (below the ground plane) at t=2",
+   "where": "tools/slime_animations.js",
+   "fix": "intended squash into the ground? otherwise lift the clip",
+   "detail": "ground is y=0",
+   "id": "I-03"
+  },
+  {
+   "sev": "INFO",
+   "group": "G5",
+   "title": "clip move sinks the mesh to y=-0.38 (below the ground plane) at t=0.5",
+   "where": "tools/slime_animations.js",
+   "fix": "intended squash into the ground? otherwise lift the clip",
+   "detail": "ground is y=0",
+   "id": "I-04"
+  },
+  {
+   "sev": "INFO",
+   "group": "G5",
+   "title": "clip attack sinks the mesh to y=-0.47 (below the ground plane) at t=0.63",
+   "where": "tools/slime_animations.js",
+   "fix": "intended squash into the ground? otherwise lift the clip",
+   "detail": "ground is y=0",
+   "id": "I-05"
+  },
+  {
+   "sev": "INFO",
+   "group": "G5",
+   "title": "clip spawn sinks the mesh to y=-0.73 (below the ground plane) at t=0.7",
+   "where": "tools/slime_animations.js",
+   "fix": "intended squash into the ground? otherwise lift the clip",
+   "detail": "ground is y=0",
+   "id": "I-06"
+  },
+  {
+   "sev": "INFO",
+   "group": "G5",
+   "title": "clip death sinks the mesh to y=-0.75 (below the ground plane) at t=0.6",
+   "where": "tools/slime_animations.js",
+   "fix": "intended squash into the ground? otherwise lift the clip",
+   "detail": "ground is y=0",
+   "id": "I-07"
+  },
+  {
+   "sev": "INFO",
+   "group": "G6",
+   "title": "3 decorative pair(s) are asymmetric on purpose or by accident",
+   "where": "tools/slime_geometry.js",
+   "fix": "SPEC 1 allows deliberate asymmetric details - confirm intent",
+   "detail": "drip_l/drip_r: unmatched drip_l_stem,drip_l_bead extra on right drip_r_stem,drip_r_bead | lobe_l/lobe_r: unmatched lobe_l1 extra on right lobe_r1 | bead_l/bead_r: unmatched bead_l extra on right bead_r",
+   "id": "I-08"
+  },
+  {
+   "sev": "INFO",
+   "group": "G6",
+   "title": "40 front samples show tooth tips outside the lip band = the intended fangs",
+   "where": "tools/slime_geometry.js (fang cubes, SPEC 2 anchors: fangs poke out of the grin)",
+   "fix": "design intent - just make sure the art reads as fangs, not gum",
+   "detail": "lip y [4.4,7.7], visible tooth tips at y 3.63/3.88/4.13/4.38/7.88/8.13 (hit z -9.8..-9.8, lip front z -9.9)",
+   "id": "I-09"
+  }
+ ],
+ "summary": {
+  "g1": {
+   "bones": 38,
+   "cubes": 76,
+   "outlinerRoots": 1,
+   "declaredBones": 27
+  },
+  "g2": {
+   "bg": [
+    95,
+    199,
+    155
+   ],
+   "tiles": 73,
+   "claimedPx": 1866,
+   "glowPx": 73,
+   "glowOutside": 0
+  },
+  "g3": {
+   "bones": 38,
+   "cubes": 76,
+   "faces": 438,
+   "uvBad": 0,
+   "orderBadBones": []
+  },
+  "g4": {
+   "tiles": 73,
+   "used": 73,
+   "unused": 0,
+   "faces": 438,
+   "claimedPx": 1866,
+   "atlasPct": null,
+   "stretched": 0,
+   "thinWhitelisted": 100,
+   "unusedNames": []
+  },
+  "g5": {
+   "clips": {
+    "idle": {
+     "len": 4,
+     "loop": true,
+     "bones": 28,
+     "keys": 645,
+     "worst": 0.79,
+     "worstBone": "lobe_r",
+     "worstT": 1,
+     "endDev": 11.273,
+     "minYmid": -0.37,
+     "maxAbs": 2.82
+    },
+    "move": {
+     "len": 1,
+     "loop": true,
+     "bones": 27,
+     "keys": 179,
+     "worst": 2.43,
+     "worstBone": "skirt",
+     "worstT": 0.5,
+     "endDev": 1.2,
+     "minYmid": -0.38,
+     "maxAbs": 7.48
+    },
+    "attack": {
+     "len": 1.25,
+     "loop": false,
+     "bones": 36,
+     "keys": 236,
+     "worst": 3.3,
+     "worstBone": "lobe_r",
+     "worstT": 0.52,
+     "endDev": 0,
+     "minYmid": -0.47,
+     "maxAbs": 11.28
+    },
+    "roar": {
+     "len": 1.6,
+     "loop": false,
+     "bones": 31,
+     "keys": 245,
+     "worst": 2.38,
+     "worstBone": "lobe_r",
+     "worstT": 0.93,
+     "endDev": 0,
+     "minYmid": 0.43,
+     "maxAbs": 7.97
+    },
+    "spawn": {
+     "len": 1.4,
+     "loop": false,
+     "bones": 28,
+     "keys": 177,
+     "worst": 4.2,
+     "worstBone": "skirt",
+     "worstT": 0,
+     "endDev": 0,
+     "minYmid": -0.73,
+     "maxAbs": 20.82
+    },
+    "death": {
+     "len": 1.2,
+     "loop": false,
+     "bones": 29,
+     "keys": 159,
+     "worst": 4.18,
+     "worstBone": "jelly_top",
+     "worstT": 1.2,
+     "endDev": null,
+     "minYmid": -0.75,
+     "maxAbs": 20.22
+    }
+   },
+   "easings": {},
+   "molang": [],
+   "worst": {
+    "d": 4.202383252393814,
+    "clip": "spawn",
+    "bone": "skirt",
+    "t": 0
+   },
+   "orderNote": ""
+  },
+  "g6": {
+   "pairs": 7,
+   "asym": 0,
+   "mawSamples": 1280,
+   "mawVisible": 40,
+   "minY": 0,
+   "fitBlocks": 1.45,
+   "eyeRatio": 0.172,
+   "eyeMid": [
+    0,
+    10,
+    -8.5
+   ],
+   "crystalMid": [
+    -0.8,
+    13.7,
+    4.9
+   ]
+  },
+  "g7": {
+   "cubes": 7,
+   "faces": 39,
+   "matched": 39
+  }
+ }
+}
