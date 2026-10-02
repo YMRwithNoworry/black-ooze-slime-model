@@ -125,11 +125,16 @@ module.exports = function build(ctx) {
         const amp = (o.amp === undefined ? 1.5 : o.amp);
         const drop = (o.drop === undefined ? 0.9 : o.drop);
         const jit = (o.jitter === undefined ? 0.22 : o.jitter);
+        // A 2-octave average clusters hard around 0.5, so the raw field almost never reaches the
+        // ends of its range and each tile lands on 2 ramp steps however wide the palette ramp is.
+        // Stretching around the midpoint is what turns the field into clumps that actually span
+        // the tone range - the difference between "tinted flat" and "material".
+        const st = (o.stretch === undefined ? 1.28 : o.stretch);
         const seed = P.seed + (o.seed || 0);
         for (let y = 0; y < h; y++) {
           const vk = h > 1 ? drop * (y / (h - 1)) : 0;
           for (let x = 0; x < w; x++) {
-            const n = fbm2(x * sc + 0.5, y * sc + 0.5, seed);
+            const n = clamp((fbm2(x * sc + 0.5, y * sc + 0.5, seed) - 0.5) * st + 0.5, 0, 1);
             P.px(x, y, map(k + (n - 0.5) * amp - vk + (hash(x, y, seed + 31) - 0.5) * jit));
           }
         }
@@ -171,7 +176,20 @@ module.exports = function build(ctx) {
       streak(x, y0, y1, k) { P.col(x, y0, y1, gel(k + 2)); P.px(x, y0, gel(k + 4)); },
       /** A 1-texel bevel: lit top row, shaded bottom row and flanks.  This is what makes a block
           read as a solid volume instead of a flat patch - deliberate structure, not noise. */
+      /** A 1-texel bevel: lit top row, shaded bottom row and flanks.  This is what makes a block
+          read as a solid volume instead of a flat patch - deliberate structure, not noise.
+          It is BUDGET-AWARE: a 3-texel-tall face cannot afford two of its three rows spent on
+          edges, which is what turned the thin dome layers into flat light/dark bands.  Below
+          5 rows the bevel retreats to a single pixel of lift and no drop, and below 3 rows it
+          does not run at all - the mottling is the material, the bevel is only an accent. */
       bevel(k, lift = 1, drop = 1, flanks = true) {
+        if (h < 3) return;
+        if (h < 5) {
+          P.px(0, 0, gel(k + lift));
+          P.px(w - 1, 0, gel(k + lift));
+          if (w >= 3) P.row(0, 1, w - 2, gel(k + lift * 0.5));
+          return;
+        }
         P.row(0, 0, w - 1, gel(k + lift));
         P.row(h - 1, 0, w - 1, gel(k - drop));
         if (flanks && h >= 3) { P.col(0, 1, h - 2, gel(k - drop * 0.7)); P.col(w - 1, 1, h - 2, gel(k - drop * 0.7)); }
@@ -214,7 +232,7 @@ module.exports = function build(ctx) {
     if (part === 'skirt') {
       // wet ground puddle: dark pooled gel, a bright waterline, run-off streaks below it
       const k = Math.round(kc);
-      P.mottle(k, { scale: 0.75, amp: 1.8, drop: 1.4, jitter: 0.2 });
+      P.mottle(k, { scale: 0.75, amp: 1.8, drop: 1.4, jitter: 0.1 });
       P.row(0, 0, w - 1, gel(k + 2));                       // waterline
       for (let i = 0; i < Math.max(2, Math.round(w / 5)); i++) {
         const x = Math.floor(hash(i, 1, P.seed) * w);
@@ -228,28 +246,28 @@ module.exports = function build(ctx) {
     if (part === 'drip') {
       // a hanging drip: dark at the tip, one wet highlight running down its leading edge
       const k = Math.round(kc);
-      P.mottle(k, { scale: 0.8, amp: 0.9, drop: 1.2, jitter: 0.14 });
+      P.mottle(k, { scale: 0.8, amp: 0.9, drop: 1.2, jitter: 0.08 });
       P.col(0, 0, h - 1, gel(k - 1)); P.col(w - 1, 0, h - 1, gel(k - 1));
       P.col(Math.min(w - 1, 1), 0, h - 1, gel(k + 2)); P.px(Math.min(w - 1, 1), 0, gel(k + 3));
       return;
     }
     if (part === 'lobe') {
       const k = Math.round(kc);
-      P.mottle(k, { scale: 0.58, amp: 1.9, drop: 0.9, jitter: 0.24 });
+      P.mottle(k, { scale: 0.58, amp: 1.9, drop: 0.9, jitter: 0.1 });
       P.bevel(k, 1.5, 1.5);
       if (w >= 7 && h >= 4) P.blotch(k + 0.9, { x: 1 + r() * (w - 4), y: h - 3, r: 2.2, squash: 0.85 });
       return;
     }
     if (part === 'knob') {
       const k = Math.round(kc);
-      P.mottle(k, { scale: 0.66, amp: 1.2, drop: 0.6, jitter: 0.18 });
+      P.mottle(k, { scale: 0.66, amp: 1.2, drop: 0.6, jitter: 0.08 });
       P.px(1, 1, gel(k + 3)); P.px(2, 0, gel(k + 3)); P.px(2, 1, gel(k + 2));
       P.row(h - 1, 0, w - 1, gel(k - 1));
       return;
     }
     if (part === 'antenna') {
       const k = Math.round(kc);
-      P.mottle(k, { scale: 0.8, amp: 1.0, drop: 0.5, jitter: 0.16 });
+      P.mottle(k, { scale: 0.8, amp: 1.0, drop: 0.5, jitter: 0.08 });
       P.bevel(k, 1, 1, false);
       P.col(Math.min(w - 1, 1), 0, h - 1, gel(k + 2));
       P.px(1, 0, gel(k + 3));
@@ -260,7 +278,10 @@ module.exports = function build(ctx) {
     // mottling, a lit top edge, pooled shadow along the bottom edge, run-off streaks on the
     // taller faces, one wet glint up high or one bubble down low.
     const k = Math.round(kc);
-    P.mottle(k, { scale: 0.65, amp: 3.1, drop: 1.2, jitter: 0.3 });
+    // The reference stone shows a near-black pit right beside a mid-grey clump INSIDE one face;
+    // a layer that sits low on the ramp needs a wider spread to reach that contrast, because
+    // the dark end of the palette has much smaller luminance steps than the light end.
+    P.mottle(k, { scale: 0.6, amp: 2.0 + (1 - light) * 2.6, drop: 1.2, jitter: 0.1 });
     P.bevel(k, 2, 2);
     if (h >= 5 && w >= 6) {                         // gel running off the layer above
       const n = 1 + Math.floor(hash(0, 21, P.seed) * 2);
@@ -299,7 +320,7 @@ module.exports = function build(ctx) {
     if (part === 'skirt') {
       // dark wet pool: clumped tone, a soft reflection patch, shaded rim
       const k = Math.round(kc - 3.6);
-      P.mottle(k, { scale: 0.85, amp: 1.0, drop: 0.5, jitter: 0.12 });
+      P.mottle(k, { scale: 0.85, amp: 1.0, drop: 0.5, jitter: 0.08 });
       const cx = (w - 1) / 2;
       for (let y = 1; y < Math.max(2, h - 1); y++) {
         const half = Math.max(1, Math.floor((h - y) / 2.2));
@@ -313,7 +334,7 @@ module.exports = function build(ctx) {
     // two soft specular pools (noise-shaped, not 2x2 squares).  The six dome layers step the
     // tone between rings, so the tile itself only has to sell the material.
     const k = Math.round(kc);
-    P.mottle(k, { scale: 0.58, amp: 2.6, drop: 0.8, jitter: 0.32 });
+    P.mottle(k, { scale: 0.46, amp: 2.4, drop: 0.9, jitter: 0.12 });
     P.row(0, 0, w - 1, gel(k + 1));
     P.row(h - 1, 0, w - 1, gel(k - 1));
     P.col(0, 0, h - 1, gel(k - 1)); P.col(w - 1, 0, h - 1, gel(k - 1));
@@ -331,7 +352,7 @@ module.exports = function build(ctx) {
   painters.gel_down = function (p) {
     const { P } = p, w = P.w, h = P.h;
     // underside: the darkest body tone, only the middle catching a little bounce light
-    P.mottle(1, { scale: 0.7, amp: 0.9, drop: 0, jitter: 0.14 });
+    P.mottle(1, { scale: 0.7, amp: 0.9, drop: 0, jitter: 0.08 });
     P.blotch(2.2, { r: Math.max(1.6, Math.min(w, h) / 2 - 0.8), squash: h / Math.max(1, w) });
     P.blotch(3.0, { r: Math.max(0.9, Math.min(w, h) / 4), squash: h / Math.max(1, w), seed: 91 });
     P.outline(gel(0));
@@ -339,7 +360,7 @@ module.exports = function build(ctx) {
 
   painters.gel_lid = function (p) {
     const { P } = p, w = P.w, h = P.h;
-    P.mottle(7, { scale: 0.75, amp: 1.1, drop: 0.5, jitter: 0.16 });
+    P.mottle(7, { scale: 0.75, amp: 1.1, drop: 0.5, jitter: 0.08 });
     P.row(0, 0, w - 1, gel(9));
     P.px(1, 0, gel(11)); P.px(2, 0, gel(10));
     P.col(0, 0, h - 1, gel(5)); P.col(w - 1, 0, h - 1, gel(5));
@@ -530,7 +551,7 @@ module.exports = function build(ctx) {
     const light = lightOf(t, 0.45);
     // obsidian: clumped facet mottling (the reference shards are never a flat wash either),
     // then a lit left edge, a shadowed right flank and a bright tip
-    P.mottle(0.5 + light + h * 0.055, { map: xtal, scale: 0.9, amp: 1.5, drop: 0.5, jitter: 0.12 });
+    P.mottle(0.5 + light + h * 0.055, { map: xtal, scale: 0.9, amp: 1.5, drop: 0.5, jitter: 0.07 });
     P.col(0, 0, h - 1, xtal(3));                     // lit facet edge
     P.col(1, 0, h - 1, xtal(2.2));
     if (w > 2) P.col(2, 0, h - 1, xtal(1.4));

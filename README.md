@@ -65,14 +65,32 @@ continue a single 13-step mint→deep-teal ramp.
 **Material, not static (the current pass).** The reference creatures in `refs/` are mottled over
 their whole surface, but the mottling arrives as *clumps* with wandering outlines — an earlier
 version of this atlas put flat tone inside a face and dropped two random 2×2 squares on top of it,
-which on screen read as scattered confetti rather than as gel. Every gel/obsidian tile is now
-painted by `P.mottle()`, a low-frequency value-noise field pushed through the palette ramp (the
-ramp's hard steps are what turn the smooth field into readable pixel clumps), and the large shapes
-are authored on top of it as *gravity-driven* features: a lit waterline along the tile's top edge,
-run-off streaks running down the taller faces, gel pooling dark along the bottom edge, and
-noise-shaped (never square) specular pools. Measured with the same metric as the reference
-(`build/ourstats.js`): the gel families average a 9.8 / 8.7 per-texel neighbour delta against the
-reference's 11.0, i.e. the same order of mottling density instead of a wash.
+which on screen read as scattered confetti rather than as gel.
+
+Every gel/obsidian tile is now painted by `P.mottle()`: a low-frequency value-noise field pushed
+through the palette ramp, where the ramp's hard steps turn the smooth field into readable pixel
+clumps. Three details turned out to matter more than the choice of noise:
+
+1. **The noise has to be stretched.** A 2-octave average clusters hard around 0.5, so the raw
+   field almost never reaches the ends of its range and even a 13-step palette ramp quantises it
+   onto 2 tones per tile — "tinted flat", which is what the model looked like. `mottle()` rescales
+   the field around its midpoint (`stretch`), which is what gets near-black clumps next to mid-grey
+   ones *inside one face*, exactly as the reference stone does.
+2. **Per-texel jitter had to go.** An earlier pass added a per-pixel hash term to "break up" the
+   mottling; at one texel per model unit that is literal static, and it is what read as 乱. The
+   jitter is now a whisper (0.08–0.12 of a tone step) and the clumps carry the texture.
+3. **The bevel is budget-aware.** `bevel()` used to light the top row and darken the bottom row
+   unconditionally — on a 2- or 3-texel-tall dome layer that spends the entire face on two edge
+   bands and erases the material. Below 5 rows it now retreats to a single lit pixel, below 3 rows
+   it does not run at all: the mottling is the material, the bevel is only an accent.
+
+On top of the material sit *gravity-driven* features: a lit waterline along the tile's top edge,
+run-off streaks on the taller faces, gel pooling dark along the bottom edge, and noise-shaped
+(never square) specular pools. Same treatment for the obsidian shards and the acid bulbs/beads.
+
+Measured with the reference's own metric (`build/ourstats.js`, per-texel neighbour delta inside
+tiles): gel_side **13.5**, gel_up **9.6**, against the reference's 11.0 — same order of mottling
+density, with the crystal/acid/eye accents deliberately far above it because they are glowing.
 
 The free space holds a **swatch board** (13-step tone ramp, a continuous ramp strip, an assembled
 dome/face reference, 5 texture cards and the full palette grid) so a human can repaint the model
