@@ -77,7 +77,10 @@ module.exports = function build(ctx) {
     return P;
   }
 
-  const base = new Canvas(res, res, rgb('gelMid'));
+  // The untouched canvas is a distinct 'nothing here' colour on purpose: the 13-step gel ramp
+  // contains the palette's gelMid at index 8, so filling with gelMid made correctly painted
+  // tiles indistinguishable from unpainted ones (a false alarm for the verifier too).
+  const base = new Canvas(res, res, rgb('void'));
   const glow = new Canvas(res, res, [0, 0, 0, 0]);
 
   // =====================================================================================
@@ -85,7 +88,8 @@ module.exports = function build(ctx) {
   // =====================================================================================
   const painters = {
     // ------------------------------------------------------------------ helpers
-    void(p) { p.P.px(0, 0, rgb('void')); },
+    // the unused-face tile must not equal the canvas base colour, or it reads as 'unpainted'
+    void(p) { p.P.px(0, 0, SH('void', 14)); },
     seam(p) {
       const { P } = p;
       P.box(0, 0, P.w, P.h, gel(1));

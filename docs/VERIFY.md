@@ -13,15 +13,15 @@ node tools/preview_slime.js# writes docs/preview_*.png + prints ASCII silhouette
 
 ## Verdict
 
-**SHIP-ABLE — 0 CRITICAL, 4 WARNING, 9 INFO.** All seven check groups pass:
+**SHIP-ABLE — 0 CRITICAL, 2 WARNING, 11 INFO, and all seven check groups PASS** (18/18, 16/16, 13/13, 10/10, 31/31, 11/11, 1/1):
 
 | group | check | result |
 |---|---|---|
-| G1 | `.bbmodel` structure (meta 5.0 / bedrock / box_uv false, outliner↔groups, unique names/uuids) | PASS 38 groups, 76 elements, 1 outliner root, tree reachable |
-| G2 | textures embedded, `internal:true`, decode 128×128 RGBA, base fully opaque, glow alpha 0 outside emissive families | PASS |
-| G3 | `.geo.json` parity with the bbmodel (origin/size/inflate/rotation + per-face UV convention) | PASS 440/440 faces, 0 uv mismatch |
-| G4 | atlas: rects reproduce a fresh shelf packing, no overlap, every rect inside a painted tile | PASS 84/84 tiles used, 0 stretched faces |
-| G5 | animations: 6 clips, format 1.8.0, names/lengths/loops, bones exist, times in range, tear metric | PASS (4 warnings, below) |
+| G1 | `.bbmodel` structure (meta 5.0 / bedrock / box_uv false, outliner↔groups, unique names/uuids) | PASS 18/18 — 38 groups, 76 elements, 1 outliner root, tree reachable |
+| G2 | textures embedded, `internal:true`, decode 128×128 RGBA, base fully opaque, glow alpha 0 outside emissive families | PASS 16/16 |
+| G3 | `.geo.json` parity with the bbmodel (origin/size/inflate/rotation + per-face UV convention) | PASS 13/13 — 440/440 faces, 0 uv mismatch |
+| G4 | atlas: rects reproduce a fresh shelf packing, no overlap, every rect inside a painted tile | PASS 10/10 — 84/84 tiles used, 0 stretched faces |
+| G5 | animations: 6 clips, format 1.8.0, names/lengths/loops, bones exist, times in range, tear metric | PASS 31/31 (2 warnings, below) |
 | G6 | aesthetics (measured): face mirror, maw hidden at rest, nothing below y=0, eyes on −Z, crystals on +Z | PASS 11/11 |
 | G7 | convention self-test against a real Blockbench pair (`refs/infested_zombie` vs its export) | PASS 39/39 faces over 7 cubes |
 
@@ -51,11 +51,16 @@ Per clip (tear = worst bone-tip displacement from its parent; moves = worst abso
 
 ## Findings
 
-**W-01 / W-02 — `idle` and `move` do not return to the rest pose at their last key.** *Not a
-defect.* These are looping clips; the correct invariant is that the last key equals the first so
-the loop is seamless, which holds for every channel (checked independently). Forcing them to rest
-would put a visible pop in the loop. The one-shot clips (`attack`, `roar`, `spawn`) all end exactly
-on the rest pose (deviation 0).
+**W-01 / W-02 — `spawn` moves `skirt` 4.2u and `death` moves `jelly_top` 4.2u from their parents.**
+*Intentional* — these two clips *are* extreme deformation (a `y 0.15` puddle forming, a `y 0.20`
+puddle collapsing), so the outer corners legitimately travel ~4 units. The checker reports them as
+informational for these two states, and no bone tears: the clips stay connected.
+
+**Resolved since the first report.** The two "loop does not return to rest" items were a checker
+false positive (a loop must end where it *starts*; that invariant is verified separately and holds
+for every channel) — the checker now says so explicitly. Also fixed at the source: the canvas base
+colour equalled gel-ramp step 8, which made correctly painted tiles look unpainted (303 texels) and
+mis-scored the atlas; and the `void` tile is no longer the same colour as the base.
 
 **W-03 / W-04 — `spawn` moves `skirt` 4.2u and `death` moves `jelly_top` 4.2u from their parents.**
 *Intentional.* These are the two clips whose whole point is extreme deformation: `spawn` starts as
